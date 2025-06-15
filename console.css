@@ -1,0 +1,34 @@
+/*
+ *   Copyright (c) 2025 fbongcam
+ *   All rights reserved.
+ */
+
+div {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: black;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+textarea {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace,
+    'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  color: white;
+  font-size: 11px;
+  outline: none;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  resize: none;
+  background: transparent;
+}
+
+#border {
+  width: 100%;
+  height: 100%;
+  border: 2px solid white;
+  box-sizing: border-box;
+}
