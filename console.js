@@ -4,172 +4,216 @@
  */
 
 export default class Console extends HTMLElement {
-  #terminal;
-  #PROMPT = "> ";
-  #history = "";
-  #commandHistory = [];
-  #commandIterator = null;
-  #lastValidCaretPos;
+   #window;
+   #input;
+   #PROMPT = "> ";
+   #commandHistory = [];
+   #commandIterator = null;
+   #htmlTags = [
+      "b", "strong", "i", "em", "mark", "small", "del", "ins", "sub", "sup",
+      "u", "abbr", "code", "kbd", "samp", "var", "q", "blockquote", "cite",
+      "pre", "span", "br", "wbr"
+   ];
 
-  constructor() {
-    super();
-    const shadow = this.attachShadow({ mode: 'closed' });
-    // Create link element for external stylesheet
-    const linkElem = document.createElement('link');
-    linkElem.setAttribute('rel', 'stylesheet');
-    linkElem.setAttribute('href', 'console.css');
-    shadow.innerHTML = `
-      <div>
-        <div id="border">
-          <textarea id="input"></textarea>
-        </div>
+   constructor(autofocus) {
+      super();
+      this.shadow = this.attachShadow({ mode: 'closed' });
+      // Create link element for external stylesheet
+      const linkElem = document.createElement('link');
+      linkElem.setAttribute('rel', 'stylesheet');
+      linkElem.setAttribute('href', 'console.css');
+      this.shadow.innerHTML = `
+      <div id="container">
+         <div id="border">
+            <div id="window"></div>
+         </div>
       </div>
-    `;
-    shadow.appendChild(linkElem);
+      `;
+      this.shadow.appendChild(linkElem);
 
-    this.#terminal = shadow.querySelector("textarea");
+      this.#window = this.shadow.querySelector("#window");
 
-    // Textarea options
-    //------------------
-    this.#terminal.spellcheck = false;
-    //------------------
+      // Set initial prompt
+      requestAnimationFrame(() => {
+         this.#newLine();
+         if (autofocus) {
+            this.#input.focus();
+         }
+      });
 
-    // Set initial prompt
-    this.#terminal.value = this.#PROMPT;
-    this.#setCaretToEnd();
+      // Prevent caret from going before prompt
+      this.#window.addEventListener("keydown", (e) => {
 
-    // Prevent caret from going before prompt
-    this.#terminal.addEventListener("keydown", (e) => {
-      const caretPos = this.#terminal.selectionStart;
-      const promptIndex = this.#terminal.value.lastIndexOf(this.#PROMPT);
-      const inputStart = promptIndex + this.#PROMPT.length;
+         // Go through previous commands
+         if (e.key === "ArrowUp" || e.key === "ArrowDown" && this.#commandHistory.length > 0) {
+            e.preventDefault();
+            // Arrow up - Previous command
+            if (e.key === "ArrowUp") {
+               this.#inputCommandHistory(-1);
+               console.log("arrow up")
+            }
+            // Arrow down - Next command
+            if (e.key === "ArrowDown") {
+               console.log("arrow down")
+               this.#inputCommandHistory(1);
+            }
+         }
 
-      // Disallow moving caret before prompt
-      if (e.key === "ArrowLeft" && caretPos <= inputStart) {
-        e.preventDefault();
-      }
-      if (e.key === "Home") {
-        e.preventDefault();
-      }
+         // On Enter: save input and add new prompt
+         if (e.key === "Enter") {
+            e.preventDefault();
+            // Add input
+            this.#handleCommand();
+         }
+      });
 
-      // Go through previous commands
-      if (e.key === "ArrowUp" || e.key === "ArrowDown" && this.#commandHistory.length > 0) {
-        e.preventDefault();
-        // Arrow up - Previous command
-        if (e.key === "ArrowUp") {
-          this.#inputCommandHistory(-1);
-          console.log("arrow up")
-        }
-        // Arrow down - Next command
-        if (e.key === "ArrowDown") {
-          console.log("arrow down")
-          if (this.#commandHistory.length - 1 === this.#commandIterator) {
-            this.#terminal.value = this.#history + this.#PROMPT;
-            this.#setCaretToEnd();
-            // Reset iterator
-            this.#commandIterator = this.#commandHistory.length ? this.#commandHistory.length - 1 : null;
+      // Prevent Safari from adding line breaks
+      this.#window.addEventListener("beforeinput", (e) => {
+         if (e.inputType === "insertParagraph") {
+            e.preventDefault();
+         }
+      });
+
+
+      // Send focus to input when window is focused
+      this.#window.addEventListener('focus', () => {
+         this.shadow.querySelector('.input-current').focus();
+      });
+      this.#window.addEventListener('click', (e) => {
+         const selection = window.getSelection();
+         const selectedText = selection ? selection.toString().trim() : "";
+         if (selectedText.length > 0) {
+            // Prevent the click from triggering if text is selected
+            e.preventDefault();
+            e.stopPropagation();
             return;
-          }
-          this.#inputCommandHistory(1);
-        }
+         }
+         this.shadow.querySelector('.input-current').focus();
+      });
+   }
+
+   #newLine() {
+      // Disable old input
+      const old = this.shadow.querySelector('.input-current');
+      if (old != null) {
+         this.#disableEditable(old);
       }
 
-      // Disallow Backspace before prompt
-      if (e.key === "Backspace" && caretPos <= inputStart) {
-        e.preventDefault();
+      const div = document.createElement('div');
+      const b = document.createElement('b');
+      b.textContent = this.#PROMPT;
+      const span = document.createElement('span');
+      span.classList.add('input', 'input-current');
+      span.contentEditable = true;
+      div.appendChild(b);
+      div.appendChild(span);
+      this.#input = span;
+      this.#window.appendChild(div);
+      requestAnimationFrame(() => {
+         this.#setCaretToEnd();
+      });
+   }
+
+   #disableEditable(el) {
+      el.removeAttribute('contenteditable');
+      el.classList.remove('input-current');
+   }
+
+   #inputCommandHistory(value) {
+      if (this.#commandIterator == null && this.#commandHistory.length > 0) {
+         this.#commandIterator = this.#commandHistory.length;
       }
 
-      // On Enter: save input and add new prompt
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const input = this.#terminal.value.slice(inputStart).trim();
-
-        // Validate non empty input
-        if (input.trim() !== "") {
-          this.#commandHistory.push(input);
-        }
-        this.#handleCommand(input);
-
-        // Reset command iterator
-        this.#commandIterator = null;
+      // Update command iterator
+      if (value === -1) {
+         this.#commandIterator--;
+      }
+      else if (value === 1) {
+         this.#commandIterator++;
       }
 
-    });
-
-    // Prevent input before prompt
-    this.#terminal.addEventListener("beforeinput", (e) => {
-      const start = this.#getPromptStart();
-      if (this.#terminal.selectionStart < start || this.#terminal.selectionEnd < start) {
-        e.preventDefault();
+      // Safety check for iterator
+      if (this.#commandIterator < 0) {
+         this.#commandIterator = 0;
       }
-    });
+      if (this.#commandIterator > this.#commandHistory.length) {
+         this.#commandIterator = this.#commandHistory.length;
+      }
 
-  }
+      const command = this.#commandHistory[this.#commandIterator];
+      if (command != null) {
+         this.#input.textContent = command;
+      }
+      else {
+         this.#input.textContent = "";
+      }
+      requestAnimationFrame(() => {
+         this.#setCaretToEnd();
+      })
 
-  #inputCommandHistory(value) {
-    if (this.#commandIterator == null && this.#commandHistory.length > 0) {
-      this.#commandIterator = this.#commandHistory.length - 1;
-    }
+      console.log("Command history: ", this.#commandHistory);
+      console.log("Loaded command: ", this.#commandHistory[this.#commandIterator]);
+   }
 
-    // Update command iterator
-    if (value === -1 && this.#commandIterator > 0) {
-      this.#commandIterator--;
-    }
-    else if (value === 1 && this.#commandIterator < (this.#commandHistory.length - 1) ) {
-      this.#commandIterator++;
-    }
+   #handleCommand() {
+      const promptLength = this.#PROMPT.length;
+      const input = this.#window.lastElementChild.textContent.slice(promptLength).trim();
+      console.log(input)
 
-    console.log("Command history: ", this.#commandHistory);
-    console.log("Loaded command: ", this.#commandHistory[this.#commandIterator]);
-    const command = this.#commandHistory[this.#commandIterator];
-    if (command != null) {
-      this.#terminal.value = this.#history + this.#PROMPT + command;
-      this.#setCaretToEnd();
-    }
-    
-    
-  }
+      // Validate non empty input
+      if (input.trim() !== "") {
+         this.#commandHistory.push(input);
+      }
+      // Reset command iterator
+      this.#commandIterator = null;
 
-  #handleCommand(input) {
-    // Add to history
-    this.#history += `${this.#PROMPT}${input}\n`;
+      this.#newLine();
+   }
 
-    // Set new prompt line
-    this.#terminal.value = this.#history + this.#PROMPT;
-    this.#setCaretToEnd();
-  }
+   #setCaretToEnd() {
+      this.#input.focus();
 
-  // Utility: set caret to end
-  #setCaretToEnd() {
-    requestAnimationFrame(() => {
-      this.#terminal.selectionStart = this.#terminal.selectionEnd = this.#terminal.value.length;
-      this.#terminal.scrollTop = this.#terminal.scrollHeight;
-    });
-  }
+      const range = document.createRange();
+      range.selectNodeContents(this.#input);
+      range.collapse(false);
 
-  #getPromptStart() {
-    return this.#terminal.value.lastIndexOf(this.#PROMPT) + this.#PROMPT.length;
-  }
+      const selection = this.shadow.getSelection?.() || window.getSelection();
+      try {
+         // Safari-friendly approach
+         selection.setBaseAndExtent(
+            range.startContainer,
+            range.startOffset,
+            range.endContainer,
+            range.endOffset
+         );
+      } catch (e) {
+         // Fallback for older browsers
+         selection.removeAllRanges();
+         selection.addRange(range);
+      }
+   }
 
-  // Save caret position if it's valid
-  #updateValidCaretPosition() {
-    const pos = this.#terminal.selectionStart;
-    const promptStart = this.#getPromptStart();
-    if (pos >= promptStart) {
-      this.#lastValidCaretPos = pos;
-    }
-  }
+   #getCaretPosition() {
+      this.#input.focus();
 
-  #enforceCaretPosition() {
-    const start = this.#getPromptStart();
-    if (this.#terminal.selectionStart < start || this.#terminal.selectionEnd < start) {
-      this.#setCaretToEnd();
-    }
-  }
+      const selection = this.shadow.getSelection?.() || window.getSelection();
+      if (selection.rangeCount === 0) return null;
 
-  setCaret(pos) {
-    this.#terminal.selectionStart = this.#terminal.selectionEnd = pos;
-    this.#terminal.scrollTop = this.#terminal.scrollHeight;
-  }
+      const range = selection.getRangeAt(0);
+      return {
+         container: range.endContainer,
+         offset: range.endOffset
+      };
+   }
+
+   setCaret(pos) {
+      this.#window.selectionStart = this.#window.selectionEnd = pos;
+      this.#window.scrollTop = this.#window.scrollHeight;
+   }
+
+   #stripTextFormattingTags(input) {
+      const tagPattern = new RegExp(`<\/?(${this.#htmlTags.join("|")})(\\s[^>]*)?>`, "gi");
+      return input.replace(tagPattern, "");
+   }
 
 }
