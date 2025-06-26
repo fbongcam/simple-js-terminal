@@ -6,6 +6,7 @@
 export default class Console extends HTMLElement {
    #window;
    #input;
+   #user = 'user';
    #PROMPT = "> ";
    #commandHistory = [];
    #commandIterator = null;
@@ -30,8 +31,69 @@ export default class Console extends HTMLElement {
       </div>
       `;
       this.shadow.appendChild(linkElem);
-
       this.#window = this.shadow.querySelector("#window");
+
+      // Commands
+      this.commands = {
+         help: () => {
+            return `Available commands: ${Object.keys(this.commands).sort().join(', ')}`;
+         },
+         echo: (args) => {
+            return args.join(' ');
+         },
+         clear: () => {
+            /* Insert line breaks to keep history
+
+            const lineHeight_px = window.getComputedStyle(this.#input).lineHeight;
+            const windowHeight_px = this.#window.clientHeight;
+            console.log(windowHeight_px)
+            console.log(lineHeight_px)
+            const windowLines = Math.floor(windowHeight_px / parseFloat(lineHeight_px));
+            for (let i=0; i < windowLines*2; i++) {
+               this.#window.appendChild(document.createElement('br')); 
+            }*/
+
+            // Clear window
+            this.#window.innerHTML = '';
+         },
+         date: () => {
+            const date = new Date();
+            return date;
+         },
+         whoami: () => {
+            return this.#user;
+         },
+         ping: async (url) => {
+            const sanitizeUrl = () => {
+               if (!/^http?:\/\//i.test(url)) {
+                  return 'http://' + url;
+               }
+               return url;
+            }
+
+            const proxy = "https://corsproxy.io/?url=";
+            url = sanitizeUrl(url);
+            const start = performance.now();
+            return await fetch(proxy + encodeURIComponent(url), {
+               method: 'GET',
+               cache: 'no-store'
+            }).then(response => {
+               const ms = performance.now() - start;
+               if (response.status === 403) {
+                  return `ping: cannot resolve ${url}`;
+               }
+               if (response.status === 429) {
+                  return `ping: too many requests ${url}`;
+               }
+               return `ping: ${ms.toFixed(0)}ms`;
+            }).catch(error => {
+               return `ping: cannot resolve ${url}`;
+            });
+         },
+         man: () => {
+
+         }
+      }
 
       // Set initial prompt
       requestAnimationFrame(() => {
@@ -43,6 +105,11 @@ export default class Console extends HTMLElement {
 
       // Prevent caret from going before prompt
       this.#window.addEventListener("keydown", (e) => {
+
+         // Key combos
+         if (e.ctrlKey && e.key === 'c') {
+            console.log('Cancel operation')
+         }
 
          // Go through previous commands
          if (e.key === "ArrowUp" || e.key === "ArrowDown" && this.#commandHistory.length > 0) {
@@ -73,7 +140,6 @@ export default class Console extends HTMLElement {
             e.preventDefault();
          }
       });
-
 
       // Send focus to input when window is focused
       this.#window.addEventListener('focus', () => {
@@ -155,19 +221,45 @@ export default class Console extends HTMLElement {
       console.log("Loaded command: ", this.#commandHistory[this.#commandIterator]);
    }
 
-   #handleCommand() {
+   async #handleCommand() {
       const promptLength = this.#PROMPT.length;
-      const input = this.#window.lastElementChild.textContent.slice(promptLength).trim();
+      const input = this.#window.lastElementChild.textContent.slice(promptLength).trim().toLowerCase();
       console.log(input)
 
       // Validate non empty input
       if (input.trim() !== "") {
          this.#commandHistory.push(input);
       }
+      
       // Reset command iterator
       this.#commandIterator = null;
 
-      this.#newLine();
+      // Split command and arguments
+      const [cmdName, ...args] = input.trim().split(/\s+/);
+
+      // Run command
+      const newTextBlock = document.createElement('div');
+      newTextBlock.classList.add('output');
+      const fn = this.commands[cmdName];
+      if (fn != null) {
+         const result = await fn(args);
+         if (result !== undefined) {
+            newTextBlock.innerHTML = result;
+            this.#window.appendChild(newTextBlock);
+         }
+      }
+      else if (input.trim() === '') {
+         // DO NOTHING
+      }
+      else {
+         newTextBlock.textContent = `Command not found: ${input}`;
+         this.#window.appendChild(newTextBlock);
+      }
+      
+
+      requestAnimationFrame(() => {
+         this.#newLine();
+      });
    }
 
    #setCaretToEnd() {
@@ -214,6 +306,23 @@ export default class Console extends HTMLElement {
    #stripTextFormattingTags(input) {
       const tagPattern = new RegExp(`<\/?(${this.#htmlTags.join("|")})(\\s[^>]*)?>`, "gi");
       return input.replace(tagPattern, "");
+   }
+
+   /**
+    * Can set custom list of commands
+    * @param {*} commands 
+    */
+   setCommands(commands) {
+      if (
+         typeof commands === 'object' &&
+         commands !== null &&
+         !Array.isArray(commands) &&
+         Object.values(commands).every(value => typeof value === 'function')
+      ) {
+         this.commands = commands;
+      } else {
+         throw new Error("Not valid commands");
+      }
    }
 
 }

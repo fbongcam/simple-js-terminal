@@ -8,7 +8,7 @@
   width: 100%;
   height: 100%;
   padding: 5px;
-  background: black;
+  background: white;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -16,7 +16,8 @@
 #window, .input {
   font-family: 'SF Mono', SFMono-Regular, ui-monospace,
     'DejaVu Sans Mono', Menlo, Consolas, monospace;
-  color: white;
+  line-height: 16px;
+  color: black;
   font-size: 11px;
   outline: none;
   border: 0;
