@@ -70,7 +70,6 @@ export default class Console extends HTMLElement {
                }
                return url;
             }
-
             const proxy = "https://corsproxy.io/?url=";
             url = sanitizeUrl(url);
             const start = performance.now();
@@ -92,6 +91,19 @@ export default class Console extends HTMLElement {
          },
          man: () => {
 
+         },
+         history: () => {
+            
+            const pre = document.createElement('pre')
+            const lines = [];
+            let index = 1001;
+            for (let i=0; i < this.#commandHistory.length - 1; i++) {
+               lines.push(`${String(index).padEnd(5)}${String(this.#commandHistory[i]).padEnd(10)}`);
+               index++;
+            }
+            pre.textContent = lines.join('\n')
+            console.log(pre)
+            return pre;
          }
       }
 
@@ -244,7 +256,13 @@ export default class Console extends HTMLElement {
       if (fn != null) {
          const result = await fn(args);
          if (result !== undefined) {
-            newTextBlock.innerHTML = result;
+            if (result instanceof HTMLElement) {
+               newTextBlock.appendChild(result);
+            }
+            else {
+               newTextBlock.innerHTML = result;
+            }
+            
             this.#window.appendChild(newTextBlock);
          }
       }
@@ -256,7 +274,6 @@ export default class Console extends HTMLElement {
          this.#window.appendChild(newTextBlock);
       }
       
-
       requestAnimationFrame(() => {
          this.#newLine();
       });
