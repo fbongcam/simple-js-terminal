@@ -98,7 +98,7 @@ export default class Console extends HTMLElement {
             const lines = [];
             let index = 1001;
             for (let i=0; i < this.#commandHistory.length - 1; i++) {
-               lines.push(`${String(index).padEnd(5)}${String(this.#commandHistory[i]).padEnd(10)}`);
+               lines.push(`${String(index).padStart(5).padEnd(8)}${String(this.#commandHistory[i])}`);
                index++;
             }
             pre.textContent = lines.join('\n')
