@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-export default class Console extends HTMLElement {
+export default class Terminal extends HTMLElement {
    #window;
    #input;
    #user = 'user';
@@ -23,7 +23,7 @@ export default class Console extends HTMLElement {
       // Create link element for external stylesheet
       const linkElem = document.createElement('link');
       linkElem.setAttribute('rel', 'stylesheet');
-      linkElem.setAttribute('href', 'console.css');
+      linkElem.setAttribute('href', 'terminal.css');
       this.shadow.innerHTML = `
       <div id="container">
          <div id="border">

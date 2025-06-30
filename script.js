@@ -1,8 +1,8 @@
-import Console from "./console.js";
+import Terminal from "./terminal.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.customElements.define('console-window', Console);
+    window.customElements.define('terminal-window', Terminal);
 
-    const console = new Console(true);
-    document.body.appendChild(console);
+    const terminal = new Terminal(true);
+    document.body.appendChild(terminal);
 });
