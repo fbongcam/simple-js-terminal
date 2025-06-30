@@ -3,6 +3,11 @@
  *   All rights reserved.
  */
 
+@keyframes blink {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
 #container {
   display: block;
   width: 100%;
@@ -13,7 +18,25 @@
   overflow: hidden;
 }
 
+#caret {
+  width: 7px;
+  height: 16px;
+  top: 0;
+  left: 0;
+  transform: translateY(-1.5px);
+  background-color: rgba(0,0,0,0.5);
+  position:absolute;
+  display: inline-block !important;
+  animation-name: blink;
+  animation-iteration-count: infinite;
+  animation-direction: alternate-reverse;
+  animation-play-state: running;
+  animation-duration: 0.5s;
+  animation-timing-function: steps(2, jump-end);
+}
+
 #window, .input {
+  position: relative;
   font-family: 'SF Mono', SFMono-Regular, ui-monospace,
     'DejaVu Sans Mono', Menlo, Consolas, monospace;
   line-height: 16px;
@@ -26,7 +49,7 @@
   overflow-y: auto;
   background: transparent;
   /* Disable default caret */
-  /*caret-color: transparent;*/
+  caret-color: transparent;
   white-space: pre-wrap;
   word-wrap: break-word;
   cursor: text;

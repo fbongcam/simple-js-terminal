@@ -15,6 +15,7 @@ export default class Console extends HTMLElement {
       "u", "abbr", "code", "kbd", "samp", "var", "q", "blockquote", "cite",
       "pre", "span", "br", "wbr"
    ];
+   #HTTPproxy = "https://corsproxy.io/?url=";
 
    constructor(autofocus) {
       super();
@@ -26,12 +27,14 @@ export default class Console extends HTMLElement {
       this.shadow.innerHTML = `
       <div id="container">
          <div id="border">
+            <div id="caret"></div>
             <div id="window"></div>
          </div>
       </div>
       `;
       this.shadow.appendChild(linkElem);
       this.#window = this.shadow.querySelector("#window");
+      this.caret = this.shadow.querySelector('#caret');
 
       // Commands
       this.commands = {
@@ -70,10 +73,9 @@ export default class Console extends HTMLElement {
                }
                return url;
             }
-            const proxy = "https://corsproxy.io/?url=";
             url = sanitizeUrl(url);
             const start = performance.now();
-            return await fetch(proxy + encodeURIComponent(url), {
+            return await fetch(this.#HTTPproxy + encodeURIComponent(url), {
                method: 'GET',
                cache: 'no-store'
             }).then(response => {
@@ -107,7 +109,7 @@ export default class Console extends HTMLElement {
          }
       }
 
-      // Set initial prompt
+      // Initialization
       requestAnimationFrame(() => {
          this.#newLine();
          if (autofocus) {
@@ -123,6 +125,13 @@ export default class Console extends HTMLElement {
             console.log('Cancel operation')
          }
 
+         // Move caret
+         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            requestAnimationFrame(() => {
+               this.#moveCaret();
+            });
+         }
+
          // Go through previous commands
          if (e.key === "ArrowUp" || e.key === "ArrowDown" && this.#commandHistory.length > 0) {
             e.preventDefault();
@@ -136,6 +145,9 @@ export default class Console extends HTMLElement {
                console.log("arrow down")
                this.#inputCommandHistory(1);
             }
+            requestAnimationFrame(() => {
+               this.#moveCaret();
+            });
          }
 
          // On Enter: save input and add new prompt
@@ -153,10 +165,6 @@ export default class Console extends HTMLElement {
          }
       });
 
-      // Send focus to input when window is focused
-      this.#window.addEventListener('focus', () => {
-         this.shadow.querySelector('.input-current').focus();
-      });
       this.#window.addEventListener('click', (e) => {
          const selection = window.getSelection();
          const selectedText = selection ? selection.toString().trim() : "";
@@ -168,6 +176,27 @@ export default class Console extends HTMLElement {
          }
          this.shadow.querySelector('.input-current').focus();
       });
+
+      this.#window.addEventListener('input', () => {
+         requestAnimationFrame(() => {
+            this.#moveCaret();
+         })
+      });
+   }
+
+   #moveCaret() {
+      const caretPosition = this.#getCaretPosition();
+      if (caretPosition.offset === 0) {
+         this.#moveCaretToNewLine();
+         return;
+      }
+      this.caret.style.left = `${caretPosition.x}px`;
+   }
+
+   #moveCaretToNewLine() {
+      const newLinePos = this.#input.getBoundingClientRect();
+      this.caret.style.top = `${newLinePos.y}px`;
+      this.caret.style.left = `${newLinePos.x}px`;
    }
 
    #newLine() {
@@ -189,6 +218,7 @@ export default class Console extends HTMLElement {
       this.#window.appendChild(div);
       requestAnimationFrame(() => {
          this.#setCaretToEnd();
+         this.#moveCaretToNewLine();
       });
    }
 
@@ -306,12 +336,23 @@ export default class Console extends HTMLElement {
       this.#input.focus();
 
       const selection = this.shadow.getSelection?.() || window.getSelection();
-      if (selection.rangeCount === 0) return null;
+      if (!selection || selection.rangeCount === 0) return null;
 
-      const range = selection.getRangeAt(0);
+      const range = selection.getRangeAt(0).cloneRange();
+
+      // Collapse the range to the caret (insertion point only)
+      range.collapse(true);
+
+      // Get bounding rectangle
+      const rect = range.getClientRects()[0] || range.getBoundingClientRect();
+
+      if (!rect) return null; // In case caret is not visible
+
       return {
          container: range.endContainer,
-         offset: range.endOffset
+         offset: range.endOffset,
+         x: rect.left,
+         y: rect.top
       };
    }
 
@@ -326,7 +367,7 @@ export default class Console extends HTMLElement {
    }
 
    /**
-    * Can set custom list of commands
+    * Set custom list of commands
     * @param {*} commands 
     */
    setCommands(commands) {
@@ -340,6 +381,14 @@ export default class Console extends HTMLElement {
       } else {
          throw new Error("Not valid commands");
       }
+   }
+
+   /**
+    * Set custom proxy server other than the default one
+    * @param {*} url 
+    */
+   setProxy(url) {
+      this.#HTTPproxy = url;
    }
 
 }
