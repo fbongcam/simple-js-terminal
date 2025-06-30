@@ -111,6 +111,7 @@ export default class Console extends HTMLElement {
 
       // Initialization
       requestAnimationFrame(() => {
+         this.#loginMessage();
          this.#newLine();
          if (autofocus) {
             this.#input.focus();
@@ -182,6 +183,15 @@ export default class Console extends HTMLElement {
             this.#moveCaret();
          })
       });
+   }
+
+   #loginMessage() {
+      let date = new Date().toUTCString();
+      date = date.replace(',', "");
+      const msg = `Last login: ${date.slice(0, 24)}`;
+      const div = document.createElement('div');
+      div.textContent = msg;
+      this.#window.appendChild(div);
    }
 
    #moveCaret() {
@@ -380,6 +390,22 @@ export default class Console extends HTMLElement {
          this.commands = commands;
       } else {
          throw new Error("Not valid commands");
+      }
+   }
+
+   /**
+    * Add command
+    * @param {string} key 
+    * @param {function} fn 
+    */
+   addCommand(key, fn) {
+      if (typeof key === 'string' && typeof fn === 'function') {
+         this.commands[key] = fn;
+      } else if (typeof key !== 'string'){
+         throw new Error('Key has to be of type string');
+      }
+      else if (typeof fn !== 'function') {
+         throw new Error('Fn has to be a function');
       }
    }
 
