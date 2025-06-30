@@ -4,8 +4,9 @@
  */
 
 @keyframes blink {
-  from {opacity: 0;}
-  to {opacity: 1;}
+  0% {opacity: 1;}
+  50% {opacity: 0;}
+  100% {opacity: 1;}
 }
 
 #container {
@@ -24,15 +25,15 @@
   top: 0;
   left: 0;
   transform: translateY(-1.5px);
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(140,140,140,1.0);
   position:absolute;
   display: inline-block !important;
   animation-name: blink;
   animation-iteration-count: infinite;
-  animation-direction: alternate-reverse;
+  animation-direction:normal;
   animation-play-state: running;
-  animation-duration: 0.5s;
-  animation-timing-function: steps(2, jump-end);
+  animation-duration: 1s;
+  animation-timing-function: steps(1, start);
 }
 
 #window, .input {
