@@ -15,6 +15,10 @@ The goal of this project isn't to create a fully working terminal with all featu
 - Simulated blinking cursor
 - Easily embeddable in any HTML page
 
+#### Commands available as of now:
+
+<pre>clear, date, echo, help, history, man, ping, whoami</pre>
+
 ## 🚀 Getting Started
 
 ### 1. Clone or Download
@@ -25,7 +29,7 @@ git clone https://github.com/fbongcam/simple-js-terminal.git
 
 ### 2. Usage
 
-Move <b>terminal.css</b> and <b>terminal.js</b> to same folder and use it like in the <b>script.js</b> file.
+Move **terminal.css** and **terminal.js** to same folder and use it like in the **script.js** file.
 
 ```js
 import Terminal from "./terminal.js";
