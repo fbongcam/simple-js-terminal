@@ -3,6 +3,8 @@
 
 A lightweight, embeddable terminal interface written in plain JavaScript. It simulates a command-line experience in the browser, complete with basic commands, command history, blinking cursor, and keyboard input.
 
+![terminal echo hello world](screen.png "preview")
+
 The goal of this project isn't to create a fully working terminal with all features, rather a super simple terminal environment that can be added for fun anywhere, for whatever reason.
 
 ## ✨ Features
