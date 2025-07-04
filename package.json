@@ -1,0 +1,51 @@
+{
+    "name": "simple-js-terminal",
+    "version": "0.0.1",
+    "description": "A lightweight, embeddable terminal interface written in plain JavaScript.",
+    "keywords": [
+        "javascript",
+        "shell",
+        "console",
+        "unix",
+        "environment",
+        "simulator",
+        "terminal"
+    ],
+    "homepage": "https://github.com/fbongcam/simple-js-terminal#readme",
+    "bugs": {
+        "url": "https://github.com/fbongcam/simple-js-terminal/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/fbongcam/simple-js-terminal.git"
+    },
+    "license": "MIT",
+    "author": "fbongcam",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "exports": {
+        "import": "./dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "build": "rollup -c; gulp; npm pack"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^28.0.6",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-replace": "^6.0.2",
+        "clean-css": "^5.3.3",
+        "gulp": "^5.0.1",
+        "gulp-replace": "^1.1.4",
+        "rollup": "^2.79.2",
+        "rollup-plugin-postcss": "^4.0.2",
+        "rollup-plugin-string-replace": "^1.0.0",
+        "rollup-plugin-terser": "^7.0.2"
+    }
+}

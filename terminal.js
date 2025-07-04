@@ -8,7 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-export default class Terminal extends HTMLElement {
+export class Terminal extends HTMLElement {
    #window;
    #input;
    #user = 'user';
@@ -26,9 +26,16 @@ export default class Terminal extends HTMLElement {
       super();
       this.shadow = this.attachShadow({ mode: 'closed' });
       // Create link element for external stylesheet
-      const linkElem = document.createElement('link');
-      linkElem.setAttribute('rel', 'stylesheet');
-      linkElem.setAttribute('href', 'terminal.css');
+      let css;
+      if (typeof process !== 'undefined' && process.env.INJECT_CSS_LINK) {
+         css = document.createElement('link');
+         css.setAttribute('rel', 'stylesheet');
+         css.setAttribute('href', './terminal.css');
+      }else {
+         const cssInject = 'INJECT_CSS_HERE';
+         css = document.createElement('style');
+         css.textContent = cssInject;
+      }
       this.shadow.innerHTML = `
       <div id="container">
          <div id="border">
@@ -37,7 +44,7 @@ export default class Terminal extends HTMLElement {
          </div>
       </div>
       `;
-      this.shadow.appendChild(linkElem);
+      this.shadow.appendChild(css);
       this.#window = this.shadow.querySelector("#window");
       this.caret = this.shadow.querySelector('#caret');
 

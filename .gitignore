@@ -1,5 +1,16 @@
 .DS_Store
-#ignore minified files
+node_modules
+.vscode
+
+# node
+package-lock.json
+
 dist/
 dist*
+
+#ignore minified files
 *.min.*
+
+# zip files
+*.zip
+*.tgz
