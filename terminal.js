@@ -30,7 +30,7 @@ export class Terminal extends HTMLElement {
       this.shadow = this.attachShadow({ mode: 'closed' });
       // Create link element for external stylesheet
       let css;
-      if (typeof process !== 'undefined' && process.env.INJECT_CSS_LINK) {
+      if (typeof process === 'undefined') {
          css = document.createElement('link');
          css.setAttribute('rel', 'stylesheet');
          css.setAttribute('href', './terminal.css');
@@ -112,28 +112,25 @@ export class Terminal extends HTMLElement {
             if (command != null) {
                // format and return command object
                const data = man[args[0]];
-               let s = '';
-               s += data.name.replaceAll(args[0], `<b>${args[0]}</b>`);
-               s += '<br>';
-               s += data.desc.replaceAll(args[0], `<b>${args[0]}</b>`);
-               return s;
+               const s = [];
+               s[0] = '<b>NAME</b>';
+               s[1] = String('     ' + data.name.replaceAll(args[0], `<b>${args[0]}</b>`));
+               s[2] = '<b>DESCRIPTION</b>';
+               s[3] = String('     ' + data.desc.replaceAll(args[0], `<b>${args[0]}</b>`));
+               return this.#pre(s.join('\n'));
             }
             else {
                return 'What manual page do you want?';
             }
          },
          history: () => {
-
-            const pre = document.createElement('pre')
             const lines = [];
             let index = 1001;
             for (let i = 0; i < this.#commandHistory.length - 1; i++) {
-               lines.push(`${String(index).padStart(5).padEnd(8)}${String(this.#commandHistory[i])}`);
+               lines.push(`     <b>${String(index)}</b>     ${String(this.#commandHistory[i])}`);
                index++;
             }
-            pre.textContent = lines.join('\n')
-            console.log(pre)
-            return pre;
+            return this.#pre(lines.join('\n'));
          }
       }
 
@@ -215,6 +212,12 @@ export class Terminal extends HTMLElement {
             this.#moveCaret();
          })
       });
+   }
+
+   #pre(content) {
+      const pre = document.createElement('pre');
+      pre.innerHTML = content;
+      return pre;
    }
 
    #loginMessage() {
