@@ -8,6 +8,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import { man } from "./man.js";
+
 export class Terminal extends HTMLElement {
    #window;
    #input;
@@ -103,8 +105,21 @@ export class Terminal extends HTMLElement {
                return `ping: cannot resolve ${url}`;
             });
          },
-         man: () => {
-
+         man: (args) => {
+            // Check match for available commands
+            const command = this.commands[args[0]];
+            if (command != null) {
+               // format and return command object
+               const data = man[args[0]];
+               let s = '';
+               s += data.name.replaceAll(args[0], `<b>${args[0]}</b>`);
+               s += '<br>';
+               s += data.desc.replaceAll(args[0], `<b>${args[0]}</b>`);
+               return s;
+            }
+            else {
+               return 'What manual page do you want?';
+            }
          },
          history: () => {
             
