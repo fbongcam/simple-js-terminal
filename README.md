@@ -23,21 +23,19 @@ The goal of this project isn't to create a fully working terminal with all featu
 
 ### 📝 How to use
 
-#### I. Script
+#### I. Importing script locally
 
 ```bash
 git clone https://github.com/fbongcam/simple-js-terminal.git
 ```
 
-Move **terminal.css** and **terminal.js** to same folder and use it like in the **script.js** file.
+Copy **terminal.min.js** from **dist** folder
 
 ```js
-import Terminal from "./terminal.js";
+import { Terminal } from "./terminal.min.js";
 ```
 
 ```js
-window.customElements.define('terminal-window', Terminal);
-
 const terminal = new Terminal(true);
 document.body.appendChild(terminal);
 ```
@@ -70,7 +68,7 @@ git clone https://github.com/fbongcam/simple-js-terminal.git
 npm run build
 ```
 
-You will end up with an archive of the newly built package.
+You will end up with an archive of the newly built **npm package** and a dist folder containing **terminal.min.js**.
 
 ## License
 

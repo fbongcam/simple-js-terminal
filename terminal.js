@@ -1,4 +1,4 @@
-/*
+/*!
 Copyright 2025 fbongcam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -6,6 +6,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+@license MIT
 */
 
 import { man } from "./man.js";
@@ -33,7 +34,7 @@ export class Terminal extends HTMLElement {
          css = document.createElement('link');
          css.setAttribute('rel', 'stylesheet');
          css.setAttribute('href', './terminal.css');
-      }else {
+      } else {
          const cssInject = 'INJECT_CSS_HERE';
          css = document.createElement('style');
          css.textContent = cssInject;
@@ -122,11 +123,11 @@ export class Terminal extends HTMLElement {
             }
          },
          history: () => {
-            
+
             const pre = document.createElement('pre')
             const lines = [];
             let index = 1001;
-            for (let i=0; i < this.#commandHistory.length - 1; i++) {
+            for (let i = 0; i < this.#commandHistory.length - 1; i++) {
                lines.push(`${String(index).padStart(5).padEnd(8)}${String(this.#commandHistory[i])}`);
                index++;
             }
@@ -221,6 +222,7 @@ export class Terminal extends HTMLElement {
       date = date.replace(',', "");
       const msg = `Last login: ${date.slice(0, 24)}`;
       const div = document.createElement('div');
+      div.id = 'login-msg';
       div.textContent = msg;
       this.#window.appendChild(div);
    }
@@ -315,7 +317,7 @@ export class Terminal extends HTMLElement {
       if (input.trim() !== "") {
          this.#commandHistory.push(input);
       }
-      
+
       // Reset command iterator
       this.#commandIterator = null;
 
@@ -335,7 +337,7 @@ export class Terminal extends HTMLElement {
             else {
                newTextBlock.innerHTML = result;
             }
-            
+
             this.#window.appendChild(newTextBlock);
          }
       }
@@ -346,7 +348,7 @@ export class Terminal extends HTMLElement {
          newTextBlock.textContent = `Command not found: ${input}`;
          this.#window.appendChild(newTextBlock);
       }
-      
+
       requestAnimationFrame(() => {
          this.#newLine();
       });
@@ -434,7 +436,7 @@ export class Terminal extends HTMLElement {
    addCommand(key, fn) {
       if (typeof key === 'string' && typeof fn === 'function') {
          this.commands[key] = fn;
-      } else if (typeof key !== 'string'){
+      } else if (typeof key !== 'string') {
          throw new Error('Key has to be of type string');
       }
       else if (typeof fn !== 'function') {

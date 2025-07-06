@@ -22,7 +22,7 @@ export default [
                     keep_classnames: true,
                 },
                 format: {
-                    comments: false, // Strip comments
+                    comments: /@license|@preserve|^!/
                 },
                 compress: {
                     keep_fargs: true,

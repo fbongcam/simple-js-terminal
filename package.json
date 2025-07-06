@@ -1,6 +1,6 @@
 {
     "name": "simple-js-terminal",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "A lightweight, embeddable terminal interface written in plain JavaScript.",
     "keywords": [
         "javascript",
@@ -34,7 +34,7 @@
         "node": ">=18"
     },
     "scripts": {
-        "build": "rollup -c; gulp; npm pack"
+        "build": "rollup -c; gulp; npm pack; node rename.js"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^28.0.6",

@@ -1,4 +1,4 @@
-import {Terminal} from "./terminal.js";
+import { Terminal } from "./terminal.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     window.customElements.define('terminal-window', Terminal);
