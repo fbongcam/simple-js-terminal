@@ -44,7 +44,15 @@ document.body.appendChild(terminal);
 
 #### II. CDN
 
-*soon*
+```js
+import { Terminal } from "https://cdn.jsdelivr.net/npm/simple-js-terminal@0.0.2/dist/terminal.min.js"
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const terminal = new Terminal(true);
+    document.body.appendChild(terminal);
+});
+```
 
 #### III. npm
 

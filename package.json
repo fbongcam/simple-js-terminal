@@ -27,7 +27,7 @@
         "import": "./dist/index.js"
     },
     "files": [
-        "dist"
+        "./dist/index.js"
     ],
     "type": "module",
     "engines": {
