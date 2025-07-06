@@ -136,6 +136,10 @@ export class Terminal extends HTMLElement {
          // Key combos
          if (e.ctrlKey && e.key === 'c') {
             console.log('Cancel operation')
+            // TODO Cancel operation
+         }
+         if (e.ctrlKey && e.key === 'l') {
+            this.commands.clear();
          }
 
          // Move caret
