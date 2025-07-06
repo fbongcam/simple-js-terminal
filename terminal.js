@@ -238,6 +238,8 @@ export class Terminal extends HTMLElement {
       const span = document.createElement('span');
       span.classList.add('input', 'input-current');
       span.contentEditable = true;
+      span.autocorrect = 'off';
+      span.autocapitalize = 'off';
       div.appendChild(b);
       div.appendChild(span);
       this.#input = span;
