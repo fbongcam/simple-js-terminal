@@ -313,7 +313,7 @@ export class Terminal extends HTMLElement {
 
    async #handleCommand() {
       const promptLength = this.#PROMPT.length;
-      const input = this.#window.lastElementChild.textContent.slice(promptLength).trim().toLowerCase();
+      const input = this.#window.lastElementChild.textContent.slice(promptLength).trim();
       console.log(input)
 
       // Validate non empty input
