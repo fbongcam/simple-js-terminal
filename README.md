@@ -66,11 +66,21 @@ import { Terminal } from 'simple-js-terminal';
 const terminal = new Terminal();
 ```
 
-## 🔨 Build
+## ⚙️ Setup for dev
 
 ```bash
 git clone https://github.com/fbongcam/simple-js-terminal.git
 ```
+
+```bash
+npm install
+```
+
+```bash
+npm run dev
+```
+
+## 🔨 Build
 
 ```bash
 npm run build
