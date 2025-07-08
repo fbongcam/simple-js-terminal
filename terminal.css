@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /*!
 Copyright 2025 fbongcam
 
@@ -8,11 +9,37 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @license MIT
 */
-
 @keyframes blink {
-  0% {opacity: 1;}
-  50% {opacity: 0;}
-  100% {opacity: 1;}
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(90, 90, 90, 0.4);
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 90, 90, 0.6);
+  cursor: pointer;
 }
 
 #container {
@@ -31,21 +58,33 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
   top: 0;
   left: 0;
   transform: translateY(-1.5px);
-  background-color: rgba(140,140,140,1.0);
-  position:absolute;
+  background-color: rgb(140, 140, 140);
+  position: absolute;
   display: inline-block !important;
   animation-name: blink;
   animation-iteration-count: infinite;
-  animation-direction:normal;
+  animation-direction: normal;
   animation-play-state: running;
   animation-duration: 1s;
   animation-timing-function: steps(1, start);
 }
 
-#window, .input {
+#resizeButton {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  width: 10px;
+  height: 10px;
+  background: gray;
+  z-index: 3;
+  cursor: w-resize;
+}
+
+#window,
+.input {
   position: relative;
-  font-family: 'SF Mono', SFMono-Regular, ui-monospace,
-    'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-family: "SF Mono", SFMono-Regular, ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
   line-height: 16px;
   color: black;
   font-size: 11px;
@@ -64,6 +103,26 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 #window > div {
   display: flex;
+}
+
+#edit {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+#edit #edit-content {
+  flex: 1;
+  overflow: auto;
+}
+#edit #edit-content -webkit-scrollbar {
+  width: 0;
+}
+#edit #edit-header,
+#edit #edit-footer {
+  display: block;
+  width: 100%;
+  height: 20px;
+  background-color: gray;
 }
 
 .input {
