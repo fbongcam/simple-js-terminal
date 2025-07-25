@@ -9,19 +9,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 @license MIT
 */
 
-@keyframes blink {
-    0% {
-        opacity: 1;
-    }
 
-    50% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
 
 /* width */
 ::-webkit-scrollbar {
@@ -64,12 +52,6 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
     background-color: rgba(140, 140, 140, 1.0);
     position: absolute;
     display: inline-block !important;
-    animation-name: blink;
-    animation-iteration-count: infinite;
-    animation-direction: normal;
-    animation-play-state: running;
-    animation-duration: 1s;
-    animation-timing-function: steps(1, start);
 }
 
 #resizeButton {

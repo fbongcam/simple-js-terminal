@@ -7,3 +7,5 @@ package-lock.json
 # zip files
 *.zip
 *.tgz
+
+terminal.css

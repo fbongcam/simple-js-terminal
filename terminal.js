@@ -24,32 +24,10 @@ export class Terminal extends HTMLElement {
       "pre", "span", "br", "wbr"
    ];
    #HTTPproxy = "https://corsproxy.io/?url=";
-
-   constructor(autofocus) {
-      super();
-      this.shadow = this.attachShadow({ mode: 'closed' });
-      // Create link element for external stylesheet
-      let css;
-      if (typeof process === 'undefined') {
-         css = document.createElement('link');
-         css.setAttribute('rel', 'stylesheet');
-         css.setAttribute('href', './terminal.css');
-      } else {
-         const cssInject = 'INJECT_CSS_HERE';
-         css = document.createElement('style');
-         css.textContent = cssInject;
-      }
-      this.shadow.innerHTML = `
-      <div id="container">
-         <div id="border">
-            <div id="caret"></div>
-            <div id="window"></div>
-         </div>
-      </div>
-      `;
-      this.shadow.appendChild(css);
-      this.#window = this.shadow.querySelector("#window");
-      this.caret = this.shadow.querySelector('#caret');
+   #isKeyDown = {};
+   #timeouts = {};
+   #animations = {};
+   #keyRepeats = 0;
 
       // Commands
       this.commands = {
@@ -131,8 +109,19 @@ export class Terminal extends HTMLElement {
                index++;
             }
             return this.#pre(lines.join('\n'));
+      // Caret blink animation
+      this.#animations['caret-blink'] = this.caret.animate(
+         [
+            { opacity: 1 },
+            { opacity: 0 },
+            { opacity: 1 }
+         ],
+         {
+            duration: 1000,
+            iterations: Infinity,
+            easing: 'steps(2, start)' // sharp transition, no fade
          }
-      }
+      );
 
       // Initialization
       requestAnimationFrame(() => {
@@ -143,8 +132,33 @@ export class Terminal extends HTMLElement {
          }
       });
 
-      // Prevent caret from going before prompt
+      this.#window.addEventListener('keyup', (e) => {
+         this.#isKeyDown[e.key] = false;
+         if (e.key === 'Backspace') {
+            this.#keyRepeats = 0;
+         }
+         
+      });
+
       this.#window.addEventListener("keydown", (e) => {
+         this.#isKeyDown[e.key] = true;
+
+         // Pause cursor blink
+         this.#animations['caret-blink'].currentTime = 500;
+         this.#animations['caret-blink'].pause();
+            clearTimeout(this.#timeouts['caret-blink']);
+         this.#timeouts['caret-blink'] = setTimeout(() => {
+            // Start cursor blink after 3s
+            this.#animations['caret-blink'].play();
+         }, 3000);
+
+         if (e.key === 'Backspace') {
+            // Debounce
+            this.#keyRepeats++;
+            if (this.#keyRepeats % 2 === 0) {
+               e.preventDefault();
+            }
+         }
 
          // Key combos
          if (e.ctrlKey && e.key === 'c') {
