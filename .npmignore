@@ -1,0 +1,26 @@
+# misc
+.vscode
+.DS_Store
+.gitignore
+.npmignore
+
+# node
+package-lock.json
+node_modules
+
+# zip files
+*.zip
+*.tgz
+
+# files
+terminal.css
+terminal.js
+terminal.scss
+gulpfile.js
+rollup.config.mjs
+screen.png
+script.js
+man.js
+index.js
+index.html
+styles.css
