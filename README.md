@@ -88,6 +88,13 @@ npm run build
 
 You will end up with an archive of the newly built **npm package** and a dist folder containing **terminal.min.js**.
 
+### Changelog
+
+- **0.0.3**
+  - Added page functionality for commands like nano and man
+  - Moved away from shadow DOM for wider browser support
+  - Lots of rewriting
+
 ## License
 
 Copyright 2025 fbongcam
