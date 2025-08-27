@@ -5,11 +5,13 @@ import fs from 'fs';
 
 // Paths
 const paths = {
-    js: ['dist/index.js'],            // Your JS source file
+    js: ['dist/terminal.min.js'],            // Your JS source file
     css: './terminal.css',                              // Your CSS file
     output: 'dist/',                                    // Output directory
 };
 
+
+// ---------- CSS Injection ----------
 // Read and escape CSS content
 function getEscapedCSS() {
     const css = fs.readFileSync(paths.css, 'utf8');
@@ -18,10 +20,14 @@ function getEscapedCSS() {
 }
 
 // Task to inject CSS
-export default function injectCSS() {
+export function injectCSS() {
     const escapedCSS = getEscapedCSS();
 
     return gulp.src(paths.js)
         .pipe(replace('"INJECT_CSS_HERE"', escapedCSS))  // Match exact placeholder
         .pipe(gulp.dest(paths.output));
 }
+
+export default gulp.series(
+    injectCSS
+);

@@ -1,11 +1,14 @@
+# misc
+.vscode
 .DS_Store
-node_modules
 
 # node
 package-lock.json
+node_modules
 
 # zip files
 *.zip
 *.tgz
 
+# files
 terminal.css

@@ -1,13 +1,16 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
+import stripProps from 'rollup-plugin-strip-props';
+import trueBanner from 'rollup-plugin-true-banner';
+
 
 export default [
     {
         input: 'index.js',
         output: [
             {
-                file: 'dist/index.js',
+                file: 'dist/terminal.min.js',
                 format: 'es',
                 sourcemap: false,
             }
@@ -15,6 +18,9 @@ export default [
         plugins: [
             resolve(),
             commonjs(),
+            stripProps([
+                'devman'
+            ]),
             terser({
                 mangle: {
                     reserved: ['autofocus'],
@@ -22,13 +28,17 @@ export default [
                     keep_classnames: true,
                 },
                 format: {
-                    comments: /@license|@preserve|^!/
+                    comments: /^!/
                 },
                 compress: {
                     keep_fargs: true,
                     drop_console: true, // Strip console logs
                 },
             }),
+            trueBanner({
+                file: 'LICENSE',
+                licenseFile: true
+            })
         ],
     },
 ];
