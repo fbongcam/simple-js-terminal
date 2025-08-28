@@ -15,9 +15,9 @@ The goal of this project isn't to create a fully working terminal with all featu
 - Simulated blinking cursor
 - Easily embeddable in any HTML page
 
-#### Commands available as of now:
+### Commands available as of now
 
-<pre>clear, date, echo, help, history, man, ping, whoami</pre>
+<pre>clear, date, echo, help, history, man, nano, ping, whoami</pre>
 
 ## 🚀 Getting Started
 
@@ -90,6 +90,8 @@ You will end up with an archive of the newly built **npm package** and a dist fo
 
 ### Changelog
 
+- **0.0.4**
+  - Tweaked build configuration
 - **0.0.3**
   - Added page functionality for commands like nano and man
   - Moved away from shadow DOM for wider browser support

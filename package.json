@@ -1,6 +1,6 @@
 {
     "name": "simple-js-terminal",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "A lightweight, embeddable terminal interface written in plain JavaScript.",
     "keywords": [
         "javascript",
@@ -23,11 +23,8 @@
     "author": "fbongcam",
     "main": "dist/index.js",
     "module": "dist/index.js",
-    "exports": {
-        "import": "./dist/index.js"
-    },
     "files": [
-        "./dist/index.js"
+        "dist/index.js"
     ],
     "type": "module",
     "engines": {
@@ -39,7 +36,7 @@
         "sass": "sass --watch .:. --no-source-map",
         "live-server": "live-server --cors --no-css-inject",
         "live-server-css-inject": "live-server --cors",
-        "build": "rollup -c; gulp; npm pack"
+        "build": "npx sass terminal.scss terminal.css --no-source-map; rollup -c; gulp; npm pack"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^28.0.6",

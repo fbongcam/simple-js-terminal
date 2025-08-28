@@ -13,6 +13,11 @@ export default [
                 file: 'dist/terminal.min.js',
                 format: 'es',
                 sourcemap: false,
+            },
+            {
+                file: 'dist/index.js',
+                format: 'es',
+                sourcemap: false
             }
         ],
         plugins: [
