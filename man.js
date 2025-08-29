@@ -23,6 +23,14 @@ export const man = {
         name: 'man - display the manual of a command',
         desc: 'man shows the manual page for the specified command.'
     },
+    nano: {
+        name: 'pico - simple text editor in the style of the Alpine Composer',
+        desc: 'Pico is a simple, display-oriented text editor based on the Alpine message system composer.'
+    },
+    pico: {
+        name: 'pico - simple text editor in the style of the Alpine Composer',
+        desc: 'Pico is a simple, display-oriented text editor based on the Alpine message system composer.'
+    },
     ping: {
         name: 'ping - test network connectivity',
         desc: 'ping simulates sending a network request to a host and shows the response time.'
