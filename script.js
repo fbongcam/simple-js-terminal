@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const terminal = new Terminal({
         autofocus: true,
         user: 'fbongcam',
-        customPrompt: ''
+        customPrompt: '',
     });
     document.body.appendChild(terminal);
 });

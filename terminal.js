@@ -73,6 +73,10 @@ export class Terminal extends HTMLElement {
       const div = document.createElement('div');
       const p = document.createElement('span');
       p.classList.add(this.#idPrefix('prompt'));
+      // prompt font weight
+      if (!this.options.boldPrompt) {
+         p.style.fontWeight = 'normal';
+      }
       p.textContent = this.#PROMPT;
       const input = document.createElement('span');
       input.classList.add(this.#idPrefix('input'), this.#idPrefix('input-current'));
@@ -507,6 +511,9 @@ export class Terminal extends HTMLElement {
          if (command || (typeof process && args[0] === 'devman' && args[1])) {
             // format and return command object
             let data = man[args[0]];
+            if (!data) {
+               return `No manual entry for ${args[0]}`;
+            }
             if (args[0] === 'devman') {
                if (!man.devman[args[1]]) {
                   console.warn('Invalid dev manual!');
@@ -633,14 +640,18 @@ export class Terminal extends HTMLElement {
     * ```
     * @param {*} options
     */
-   constructor(options = {
-      user: null,
-      customPrompt: null,
-      boldPrompt: true,
-      autofocus: true,
-   }) {
+   constructor(options = {}) {
       super();
 
+      this.options = {
+         user: null,
+         customPrompt: null,
+         boldPrompt: true,
+         autofocus: true,
+         ...options, // overrides defaults only where provided
+      };
+
+      // User
       if (options.user) {
          const invalidUserChars = /["/\\[\]:;|=,+*?<> ]/;
          if (options.user.match(invalidUserChars)) {
@@ -653,6 +664,7 @@ export class Terminal extends HTMLElement {
             this.#user = options.user;
          }
       }
+      // Prompt
       if (options.customPrompt) {
          if (options.customPrompt.length > 50) {
             console.error('Custom prompt is too long (50 characters limit)');
