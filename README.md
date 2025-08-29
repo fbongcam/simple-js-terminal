@@ -45,7 +45,7 @@ document.body.appendChild(terminal);
 #### II. CDN
 
 ```js
-import { Terminal } from "https://cdn.jsdelivr.net/npm/simple-js-terminal@0.0.2/dist/terminal.min.js"
+import { Terminal } from "https://cdn.jsdelivr.net/npm/simple-js-terminal@0.0.4/dist/index.min.js"
 
 document.addEventListener('DOMContentLoaded', () => {
 
