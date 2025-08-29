@@ -6,7 +6,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-@license MIT
 */
 
 $cursorColor: rgba(140, 140, 140, 1.0);
@@ -73,7 +72,7 @@ terminal-window {
         position: absolute;
         transform: translate(-1px, -1px);
         display: inline-block !important;
-        box-sizing: content-box;
+        box-sizing: border-box;
         z-index: 999;
     }
 
@@ -94,6 +93,12 @@ terminal-window {
         cursor: w-resize;
     }*/
 
+    .simple-js-terminal-fb-prompt {
+        display: inline-block;
+        font-weight: bold;
+        white-space: pre;
+    }
+
     #simple-js-terminal-fb-window,
     .simple-js-terminal-fb-input {
         position: relative;
@@ -108,6 +113,23 @@ terminal-window {
         z-index: 2;
     }
 
+    .simple-js-terminal-fb-input {
+        overflow-y: initial;
+        display: block;
+    }
+
+    .simple-js-terminal-fb-floating-input {
+        display: flex;
+        position: absolute;
+        width: 100%;
+        bottom: 5px;
+        left: 5px;
+        background: #fff;
+        z-index: 10;
+        .simple-js-terminal-fb-input {
+            flex: 1;
+        }
+    }
 
     #simple-js-terminal-fb-window>div {
         display: flex;
@@ -184,24 +206,6 @@ terminal-window {
 
     #simple-js-terminal-fb-header {
         top: 0;
-    }
-
-    .simple-js-terminal-fb-input {
-        overflow-y: initial;
-        display: block;
-    }
-
-    .simple-js-terminal-fb-floating-input {
-        display: flex;
-        position: absolute;
-        width: 100%;
-        bottom: 5px;
-        left: 5px;
-        background: #fff;
-        z-index: 10;
-        .simple-js-terminal-fb-input {
-            flex: 1;
-        }
     }
 
     pre {

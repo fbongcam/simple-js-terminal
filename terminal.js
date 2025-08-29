@@ -15,7 +15,7 @@ export class Terminal extends HTMLElement {
    #window;
    #input; // Input element
    #user = 'user';
-   #PROMPT = "> ";
+   #PROMPT = `> `;
    #commandHistory = []; // List of used commands
    #commandIterator = null;
    #HTTPproxy = "https://corsproxy.io/?url=";
@@ -71,17 +71,18 @@ export class Terminal extends HTMLElement {
     */
    #createInput = () => {
       const div = document.createElement('div');
-      const b = document.createElement('b');
-      b.textContent = this.#PROMPT;
-      const span = document.createElement('span');
-      span.classList.add(this.#idPrefix('input'), this.#idPrefix('input-current'));
-      span.contentEditable = true;
-      span.autocorrect = 'off';
-      span.spellcheck = false;
-      span.autocapitalize = 'off';
-      div.appendChild(b);
-      div.appendChild(span);
-      return { 'input': div, 'inputField': span };
+      const p = document.createElement('span');
+      p.classList.add(this.#idPrefix('prompt'));
+      p.textContent = this.#PROMPT;
+      const input = document.createElement('span');
+      input.classList.add(this.#idPrefix('input'), this.#idPrefix('input-current'));
+      input.contentEditable = true;
+      input.autocorrect = 'off';
+      input.spellcheck = false;
+      input.autocapitalize = 'off';
+      div.appendChild(p);
+      div.appendChild(input);
+      return { 'input': div, 'inputField': input };
    }
 
    /**
@@ -610,8 +611,57 @@ export class Terminal extends HTMLElement {
       */
    }
 
-   constructor({ autofocus = true, parent = document.body }) {
+   /**
+    * Simple js terminal constructor
+    * 
+    * user - Sets custom user name 
+    * 
+    * customPrompt - Change prompt to a custom one
+    * 
+    * boldPrompt - Determines if prompt text should be bold or not
+    * 
+    * autofocus - Wether terminal should take focus when created
+    * 
+    * ```javascript
+    * // Defaults
+    * const options = {
+    *    user: null,
+    *    customPrompt: null,
+    *    boldPrompt: true,
+    *    autofocus: true
+    * }
+    * ```
+    * @param {*} options
+    */
+   constructor(options = {
+      user: null,
+      customPrompt: null,
+      boldPrompt: true,
+      autofocus: true,
+   }) {
       super();
+
+      if (options.user) {
+         const invalidUserChars = /["/\\[\]:;|=,+*?<> ]/;
+         if (options.user.match(invalidUserChars)) {
+            console.warn('Invalid user name provided');
+         }
+         else if (options.user.length > 30) {
+            console.error('User name is too long. (30 characters limit)');
+         }
+         else {
+            this.#user = options.user;
+         }
+      }
+      if (options.customPrompt) {
+         if (options.customPrompt.length > 50) {
+            console.error('Custom prompt is too long (50 characters limit)');
+         }
+         else {
+            this.#PROMPT = options.customPrompt.trim() + ' ';
+         }
+      }
+
       // Create link element for external stylesheet
       let css;
       if (typeof process === 'undefined') {
@@ -661,7 +711,7 @@ export class Terminal extends HTMLElement {
       requestAnimationFrame(() => {
          this.#loginMessage();
          this.#newCommandInput();
-         if (autofocus) {
+         if (options.autofocus) {
             this.#input.focus();
          }
       });
