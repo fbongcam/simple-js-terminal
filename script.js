@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fs = new VirtualFileSystem({users:{filip:{}, alex:{}}});
     console.log(fs.getPaths());
-    const p = fs.getNode('home');
-    console.log(p)
+    fs.cd('home');
+    //console.log(p)
+    console.log(fs.ls());
 });

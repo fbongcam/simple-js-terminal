@@ -199,12 +199,30 @@ export class VirtualFileSystem {
                 }
             }
         };
+        this.#currentNode = '/';
     }
 
     getNode(path) {
-        if (path === '/' || path === '') return this.#fs['/'];
+        if (this.#currentNode === '/' && (path === '' || path === undefined) ) {
+            return this.#fs['/'];
+        }
+        else if (this.#currentNode !== '/' && (path === '' || path === undefined) ) {
+            path = this.#currentNode;
+        }
 
-        const parts = path.split('/').filter(Boolean); // split by "/" and drop empties
+        let parts;
+        if (path === '..' && this.#currentNode !== '/') {
+            parts = this.#currentNode.split('/').filter(Boolean);
+            parts = parts.slice(0, parts.length - 2).join('/');
+            if (parts.length === 0) {
+                return this.#fs['/'];
+            }
+        }
+        else if (path === '..' && this.#currentNode === '/') {
+            return this.#fs['/'];
+        }
+
+        parts = path.split('/').filter(Boolean); // split by "/" and drop empties
         let node = this.#fs['/']; // always start at root
 
         for (const part of parts) {
@@ -214,7 +232,7 @@ export class VirtualFileSystem {
                 return null; // not found
             }
         }
-        
+
         return node;
     }
 
@@ -224,10 +242,15 @@ export class VirtualFileSystem {
      * @param {*} path 
      */
     cd(path) {
-        const node = this.getNode(path);
-        if (node === null) {
-            return false;
+        // Jump to home directory 
+        if (path === '' || path === undefined) {
+            this.#currentNode = '/';
+            return this.getNode('/');
         }
+
+        const node = this.getNode(path);
+        if (node === null) return null;
+
         this.#currentNode = path;
         return node;
     }
@@ -237,7 +260,20 @@ export class VirtualFileSystem {
      * @param {*} path Optional path
      */
     ls(path) {
+        const filenames = [];
+        let entries;// Get entries from specified path
+        const node = this.getNode(path);
+        console.log(node)
+        entries = Object.entries(node);
 
+        if (entries.length > 0) {
+            for (const [key, value] of entries) {
+                console.log(key);
+                filenames.push(key);
+            }
+        }
+
+        return filenames;
     }
 
     /**
