@@ -1,14 +1,15 @@
 export class VirtualFileSystem {
     #options;
-    #unixFileSystem;
+    #fs;
+    #currentNode;
 
     constructor(options = {}) {
         this.#options = {
-            users: {admin:{}},
+            users: { admin: {} },
             ...options
         }
 
-        this.#unixFileSystem = {
+        this.#fs = {
             '/': {
                 bin: {
                     bash: null,
@@ -200,12 +201,35 @@ export class VirtualFileSystem {
         };
     }
 
+    getNode(path) {
+        if (path === '/' || path === '') return this.#fs['/'];
+
+        const parts = path.split('/').filter(Boolean); // split by "/" and drop empties
+        let node = this.#fs['/']; // always start at root
+
+        for (const part of parts) {
+            if (node && typeof node === 'object' && part in node) {
+                node = node[part];
+            } else {
+                return null; // not found
+            }
+        }
+        
+        return node;
+    }
+
+
     /**
      * Navigate to path
      * @param {*} path 
      */
     cd(path) {
-
+        const node = this.getNode(path);
+        if (node === null) {
+            return false;
+        }
+        this.#currentNode = path;
+        return node;
     }
 
     /**
@@ -266,6 +290,6 @@ export class VirtualFileSystem {
     }
 
     getPaths() {
-        return this.#unixFileSystem;
+        return this.#fs;
     }
 }
