@@ -2,6 +2,7 @@ export class VirtualFileSystem {
     #options;
     #fs;
     #currentNode;
+    #commandStyle = 'border-left: 3px solid black;padding:12px;font-size:13px;font-weight:bold;';
 
     constructor(options = {}) {
         this.#options = {
@@ -202,11 +203,16 @@ export class VirtualFileSystem {
         this.#currentNode = '/';
     }
 
-    getNode(path) {
-        if (this.#currentNode === '/' && (path === '' || path === undefined) ) {
-            return this.#fs['/'];
+    /**
+     * Gets node from path
+     * @param {*} path 
+     * @returns Object { contents, path, parentNode }
+     */
+    #getNode(path) {
+        if (this.#currentNode === '/' && (path === '' || path === undefined)) {
+            return {contents: this.#fs['/'], path: '/', parent: null};
         }
-        else if (this.#currentNode !== '/' && (path === '' || path === undefined) ) {
+        else if (this.#currentNode !== '/' && (path === '' || path === undefined)) {
             path = this.#currentNode;
         }
 
@@ -215,41 +221,51 @@ export class VirtualFileSystem {
             parts = this.#currentNode.split('/').filter(Boolean);
             parts = parts.slice(0, parts.length - 2).join('/');
             if (parts.length === 0) {
-                return this.#fs['/'];
+                return {contents: this.#fs['/'], path: '/', parent: null};
             }
         }
         else if (path === '..' && this.#currentNode === '/') {
-            return this.#fs['/'];
+            return {contents: this.#fs['/'], path: '/', parent: null};
         }
 
         parts = path.split('/').filter(Boolean); // split by "/" and drop empties
         let node = this.#fs['/']; // always start at root
 
+        const treeLength = parts.length;
+        let i = 0;
+        let parent = this.#fs['/'];
         for (const part of parts) {
+            i++;
+            if (i === treeLength - 1) {
+                parent = node[part];
+            }
             if (node && typeof node === 'object' && part in node) {
                 node = node[part];
             } else {
                 return null; // not found
             }
+            
         }
 
-        return node;
+        return {contents: node, path: path, parent: parent};
     }
-
 
     /**
      * Navigate to path
      * @param {*} path 
      */
     cd(path) {
+        console.log('%ccd', this.#commandStyle);
         // Jump to home directory 
         if (path === '' || path === undefined) {
             this.#currentNode = '/';
-            return this.getNode('/');
+            return this.#getNode('/');
         }
 
-        const node = this.getNode(path);
+        const node = this.#getNode(path);
         if (node === null) return null;
+
+        console.log(node);
 
         this.#currentNode = path;
         return node;
@@ -260,15 +276,16 @@ export class VirtualFileSystem {
      * @param {*} path Optional path
      */
     ls(path) {
+        console.log('%cls', this.#commandStyle);
+
         const filenames = [];
         let entries;// Get entries from specified path
-        const node = this.getNode(path);
-        console.log(node)
-        entries = Object.entries(node);
+        const node = this.#getNode(path);
+        entries = Object.entries(node.contents);
 
         if (entries.length > 0) {
-            for (const [key, value] of entries) {
-                console.log(key);
+            for (const [key] of entries) {
+                console.log(`${key}`);
                 filenames.push(key);
             }
         }
@@ -278,11 +295,28 @@ export class VirtualFileSystem {
 
     /**
      * Move file
-     * @param {*} input 
-     * @param {*} output 
+     * @param {*} source path to source destination
+     * @param {*} dest path to output destination
      */
-    mv(input, output) {
+    mv(source, dest) {
+        console.log('%cmv', this.#commandStyle);
+        const sourceParts = source.split('/').filter(Boolean);
+        const destParts = dest.split('/').filter(Boolean);
 
+        const sourceKey = sourceParts.pop();
+        destParts.pop();
+
+        const sourceNode = this.#getNode(source);
+        const destNode = this.#getNode(destParts.join('/'));
+
+
+        if (sourceNode === null || destNode === null) {
+            throw new Error('No such file or directory');
+        }
+
+        destNode.contents[sourceKey] = sourceNode.contents;
+        delete sourceNode.parent[sourceKey];
+        console.log(`Moved ${source} to ${dest}`);
     }
 
     /**
@@ -290,7 +324,7 @@ export class VirtualFileSystem {
      * @param {*} input 
      * @param {*} output 
      */
-    cp(input, output) {
+    cp(source, dest) {
 
     }
 
@@ -325,7 +359,7 @@ export class VirtualFileSystem {
 
     }
 
-    getPaths() {
+    getFilestructure() {
         return this.#fs;
     }
 }
