@@ -1,7 +1,7 @@
 export class VirtualFileSystem {
     #options;
     #fs;
-    #currentNode;
+    #currentPath;
     #commandStyle = 'border-left: 3px solid black;padding:12px;font-size:13px;font-weight:bold;';
 
     constructor(options = {}) {
@@ -200,7 +200,7 @@ export class VirtualFileSystem {
                 }
             }
         };
-        this.#currentNode = '/';
+        this.#currentPath = '/';
     }
 
     /**
@@ -209,23 +209,23 @@ export class VirtualFileSystem {
      * @returns Object { contents, path, parentNode }
      */
     #getNode(path) {
-        if (this.#currentNode === '/' && (path === '' || path === undefined)) {
-            return {contents: this.#fs['/'], path: '/', parent: null};
+        if (this.#currentPath === '/' && (path === '' || path === undefined)) {
+            return { contents: this.#fs['/'], path: '/', parent: null };
         }
-        else if (this.#currentNode !== '/' && (path === '' || path === undefined)) {
-            path = this.#currentNode;
+        else if (this.#currentPath !== '/' && (path === '' || path === undefined)) {
+            path = this.#currentPath;
         }
 
         let parts;
-        if (path === '..' && this.#currentNode !== '/') {
-            parts = this.#currentNode.split('/').filter(Boolean);
+        if (path === '..' && this.#currentPath !== '/') {
+            parts = this.#currentPath.split('/').filter(Boolean);
             parts = parts.slice(0, parts.length - 2).join('/');
             if (parts.length === 0) {
-                return {contents: this.#fs['/'], path: '/', parent: null};
+                return { contents: this.#fs['/'], path: '/', parent: null };
             }
         }
-        else if (path === '..' && this.#currentNode === '/') {
-            return {contents: this.#fs['/'], path: '/', parent: null};
+        else if (path === '..' && this.#currentPath === '/') {
+            return { contents: this.#fs['/'], path: '/', parent: null };
         }
 
         parts = path.split('/').filter(Boolean); // split by "/" and drop empties
@@ -244,11 +244,28 @@ export class VirtualFileSystem {
             } else {
                 return null; // not found
             }
-            
+
         }
 
-        return {contents: node, path: path, parent: parent};
+        return { contents: node, path: path, parent: parent };
     }
+
+    #cloneNode(node) {
+        if (node === null) {
+            // file: just return a new "file"
+            return null;
+        }
+        if (typeof node === 'object') {
+            // directory: deep clone
+            const copy = {};
+            for (const key in node) {
+                copy[key] = this.#cloneNode(node[key]); // recursive
+            }
+            return copy;
+        }
+        throw new Error("Invalid node type");
+    }
+
 
     /**
      * Navigate to path
@@ -258,7 +275,7 @@ export class VirtualFileSystem {
         console.log('%ccd', this.#commandStyle);
         // Jump to home directory 
         if (path === '' || path === undefined) {
-            this.#currentNode = '/';
+            this.#currentPath = '/';
             return this.#getNode('/');
         }
 
@@ -267,7 +284,7 @@ export class VirtualFileSystem {
 
         console.log(node);
 
-        this.#currentNode = path;
+        this.#currentPath = path;
         return node;
     }
 
@@ -321,19 +338,55 @@ export class VirtualFileSystem {
 
     /**
      * Copy & paste file
-     * @param {*} input 
-     * @param {*} output 
+     * @param {*} source Path to source file 
+     * @param {*} dest Path to output file 
      */
     cp(source, dest) {
+        console.log('%ccp', this.#commandStyle);
 
+        const sourceParts = source.split('/').filter(Boolean);
+        const destParts = dest.split('/').filter(Boolean);
+
+        const sourceKey = sourceParts.pop();
+        destParts.pop();
+
+        const sourceNode = this.#getNode(source);
+        const destNode = this.#getNode(destParts.join('/'));
+
+
+        if (sourceNode === null || destNode === null) {
+            throw new Error('No such file or directory');
+        }
+
+        const clonedNode = this.#cloneNode(sourceNode.contents);
+
+        destNode.contents[sourceKey] = clonedNode;
+        console.log(`Copied ${source} to ${dest}`);
     }
 
     /**
      * Create file
-     * @param {*} path 
+     * @param {*} path Path to file
      */
     touch(path) {
+        console.log('%ctouch', this.#commandStyle);
 
+        // Check directory levels of path
+        const parts = path.split('/').filter(Boolean);
+        const dirLevels = parts.length;
+        const filename = parts.pop();
+        if (dirLevels > 1) { // If path has directory levels
+            // Check if parent of path exists
+            const parent = this.#getNode(parts.join('/'));
+            if (parent === null) {
+                throw new Error('No such file or directory');
+            }
+            parent.contents[filename] = null;
+        }
+        else if (dirLevels === 1) { // If path has no directory levels
+            this.#getNode(this.#currentPath).contents[filename] = null;
+        }
+        console.log(`Created file ${path}`);
     }
 
     /**

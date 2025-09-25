@@ -17,4 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fs.mv('home', 'bin/home')
     fs.cd('..');
     fs.ls()
+    fs.cp('bin/home', 'home');
+    fs.cd('..')
+    fs.touch('test');
+    fs.cd('/')
 });
