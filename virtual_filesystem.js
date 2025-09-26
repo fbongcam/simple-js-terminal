@@ -375,6 +375,7 @@ export class VirtualFileSystem {
         const parts = path.split('/').filter(Boolean);
         const dirLevels = parts.length;
         const filename = parts.pop();
+
         if (dirLevels > 1) { // If path has directory levels
             // Check if parent of path exists
             const parent = this.#getNode(parts.join('/'));
@@ -391,10 +392,80 @@ export class VirtualFileSystem {
 
     /**
      * Create directory
-     * @param {*} name 
+     * @param {*} args "-p" for recursively make directories of path
+     * @param {*} path Path of directory 
      */
-    mkdir(name) {
+    mkdir(args, path) {
+        console.log('%cmkdir', this.#commandStyle);
 
+        if ((args !== undefined && args !== null && args !== '' && args !== false) && args !== '-p') {
+            throw new Error(`Invalid option -- ${args}`);
+        }
+
+        // Check directory levels of path
+        const dirs = path.split('/').filter(Boolean);
+        const dirLevels = dirs.length;
+        const dirname = dirs.pop();
+
+        // If only 1 level, check if directory already exists
+        if (dirLevels === 1) {
+            let node = this.#getNode(dirname);
+            if (node === null) { // If directory dont exist
+                // Create directory in parent node
+                node.parent[dirname] = {};
+                console.log(`Created directory ${path}`);
+                return;
+            }
+            else {
+                throw new Error('Directory already exists')
+            }
+        }
+
+        // Check each level of tree from path if directory exists
+        const tree = {}
+        let tempNode;
+        for (const dir of dirs) {
+            tempNode = this.#getNode(dir);
+            if (tempNode === null) {
+                tree[dir] = false;
+                continue;
+            }
+            tree[dir] = true;
+        }
+
+        console.log(tree)
+
+        // Validate existence of each directory
+        if (Object.values(tree).includes(false)) {
+            if (args === '-p') { // Create directories recursively
+                // Create every parent directory
+                let growingPath = [];
+                let prevEntry = null; // [0] = directory name, [1] = exists or not (true, false)
+                let node;
+                for (const [dir, exist] of Object.entries(tree)) {
+                    // If dir doesn't exist
+                    if (!exist) {
+                        // Create directory in existing parent directory
+                        node = this.#getNode(growingPath.join('/'));
+                        console.log(growingPath);
+                        console.log(node)
+                        node.contents[dir] = {};
+                    }
+                    prevEntry = [dir, exist];
+                    growingPath.push(dir);
+                    console.log(prevEntry)
+                }
+                node = this.#getNode(growingPath.join('/'));
+                node.contents[dirname] = {};
+            }
+            else {
+                throw new Error(`Cannot create directory ${path}: No such file or directory`);
+            }
+        }
+        else {
+            const node = this.#getNode(dirs.join('/'));
+            node.contents[dirname] = {};
+        }
     }
 
     /**

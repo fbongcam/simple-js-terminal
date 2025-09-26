@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fs.ls()
     fs.cp('bin/home', 'home');
     fs.cd('..')
-    fs.touch('test');
+    fs.touch('touchFile');
+    fs.cd('/')
+    fs.mkdir('-p','bin/test2');
     fs.cd('/')
 });
