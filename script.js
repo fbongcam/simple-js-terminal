@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fs.cd('..')
     fs.touch('touchFile');
     fs.cd('/')
-    fs.mkdir('-p','bin/test2');
+    fs.mkdir('-p','bin/test2/test3/test4');
     fs.cd('/')
+    fs.rmdir('-p','bin/test2/test3/test4');
 });

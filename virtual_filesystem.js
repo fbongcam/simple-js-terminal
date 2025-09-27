@@ -209,8 +209,13 @@ export class VirtualFileSystem {
      * @returns Object { contents, path, parentNode }
      */
     #getNode(path) {
+        const vfsNode = new VirtualFileSystem.Node();
+
         if (this.#currentPath === '/' && (path === '' || path === undefined)) {
-            return { contents: this.#fs['/'], path: '/', parent: null };
+            vfsNode.contents = this.#fs['/'];
+            vfsNode.path = '/';
+            vfsNode.parentNode = null;
+            return vfsNode;
         }
         else if (this.#currentPath !== '/' && (path === '' || path === undefined)) {
             path = this.#currentPath;
@@ -221,11 +226,17 @@ export class VirtualFileSystem {
             parts = this.#currentPath.split('/').filter(Boolean);
             parts = parts.slice(0, parts.length - 2).join('/');
             if (parts.length === 0) {
-                return { contents: this.#fs['/'], path: '/', parent: null };
+                vfsNode.contents = this.#fs['/'];
+                vfsNode.path = '/';
+                vfsNode.parentNode = null;
+                return vfsNode;
             }
         }
         else if (path === '..' && this.#currentPath === '/') {
-            return { contents: this.#fs['/'], path: '/', parent: null };
+            vfsNode.contents = this.#fs['/'];
+            vfsNode.path = '/';
+            vfsNode.parentNode = null;
+            return vfsNode;
         }
 
         parts = path.split('/').filter(Boolean); // split by "/" and drop empties
@@ -244,10 +255,9 @@ export class VirtualFileSystem {
             } else {
                 return null; // not found
             }
-
         }
 
-        return { contents: node, path: path, parent: parent };
+        return new VirtualFileSystem.Node(node, path, parent);
     }
 
     #cloneNode(node) {
@@ -266,6 +276,45 @@ export class VirtualFileSystem {
         throw new Error("Invalid node type");
     }
 
+    /**
+     * 
+     * @param {*} node 
+     * @returns true or false
+     */
+    #isFile(node) {
+        if (!(node instanceof VirtualFileSystem.Node)) {
+            throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
+        }
+        if (typeof node.contents === null) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 
+     * @param {*} node 
+     * @returns true or false
+     */
+    #isDirectory(node) {
+        if (!(node instanceof VirtualFileSystem.Node)) {
+            throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
+        }
+        if (typeof node.contents === 'object') {
+            return true;
+        }
+        return false;
+    }
+
+    #isDirectoryEmpty(node) {
+        if (!(node instanceof VirtualFileSystem.Node)) {
+            throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
+        }
+        if (Object.keys(node.contents).length === 0) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Navigate to path
@@ -280,7 +329,16 @@ export class VirtualFileSystem {
         }
 
         const node = this.#getNode(path);
-        if (node === null) return null;
+        if (node === null) {
+            return null;
+        }
+
+        console.log(node)
+
+        // Check if node is directory
+        if (!this.#isDirectory(node)) {
+            throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Not a directory`);
+        }
 
         console.log(node);
 
@@ -332,7 +390,7 @@ export class VirtualFileSystem {
         }
 
         destNode.contents[sourceKey] = sourceNode.contents;
-        delete sourceNode.parent[sourceKey];
+        delete sourceNode.parentNode[sourceKey];
         console.log(`Moved ${source} to ${dest}`);
     }
 
@@ -433,8 +491,6 @@ export class VirtualFileSystem {
             tree[dir] = true;
         }
 
-        console.log(tree)
-
         // Validate existence of each directory
         if (Object.values(tree).includes(false)) {
             if (args === '-p') { // Create directories recursively
@@ -470,10 +526,65 @@ export class VirtualFileSystem {
 
     /**
      * Remove empty directory
+     * @param {*} args 
      * @param {*} path 
      */
-    rmdir(path) {
+    rmdir(args, path) {
+        console.log('%crmdir', this.#commandStyle);
 
+        if ((args !== undefined && args !== null && args !== '' && args !== false) && args !== '-p') {
+            throw new Error(`Invalid option -- ${args}`);
+        }
+
+        // Break path into dirs
+        let dirs = path.split('/').filter(Boolean);
+
+        if (dirs.length > 1 && args !== '-p') {
+            // Remove last directory in path
+            const node = this.#getNode(dirs.join('/'));
+            if (node === null) {
+                throw new Error('No such file or directory');
+            }
+            if (!this.#isDirectory(node)) {
+                throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Not a directory`);
+            }
+            // Check if dir empty
+            if (this.#isDirectoryEmpty(node)) {
+                // Remove if empty
+                delete node.parent[dirs[dirs.length - 1]];
+                console.log(`Removed directory ${dirs[dirs.length - 1]}`);
+            }
+            else {
+                throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Directory not empty`);
+            }
+        }
+        else if (dirs.length > 1 && args === '-p') {
+            // Remove directories recursively
+            for (let i = dirs.length - 1; i >= 0; i--) {
+                // Check if node is directory
+                const node = this.#getNode(dirs.join('/'));
+                if (node === null) {
+                    throw new Error('No such file or directory');
+                }
+                if (!this.#isDirectory(node)) {
+                    throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Not a directory`);
+                }
+                // Check if dir empty
+                if (this.#isDirectoryEmpty(node)) {
+                    // Remove if empty
+                    delete node.parentNode[dirs[i]];
+                    console.log(`Removed directory ${dirs[i]}`);
+                    // Generate new path for next iteration
+                    dirs = dirs.slice(0, dirs.length - 1 < 0 ? 0 : dirs.length - 1);
+                }
+                else {
+                    throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Directory not empty`);
+                }
+            }
+        }
+        else {
+            throw new Error('No such file or directory');
+        }
     }
 
     /**
@@ -485,5 +596,31 @@ export class VirtualFileSystem {
 
     getFilestructure() {
         return this.#fs;
+    }
+}
+
+VirtualFileSystem.Node = class Node {
+    constructor(contents, path, parentNode) {
+        this.contents = contents;
+        this.path = path;
+        this.parentNode = parentNode;
+    }
+
+    setAll(content, path, parentNode) {
+        this.contents = content;
+        this.path = path;
+        this.parentNode = parentNode;
+    }
+
+    setContent(content) {
+        this.contents = content;
+    }
+
+    setPath(path) {
+        this.path = path;
+    }
+
+    setParentNode(parentNode) {
+        this.parentNode = parentNode;
     }
 }
