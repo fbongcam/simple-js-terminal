@@ -205,7 +205,7 @@ export class VirtualFileSystem {
 
     /**
      * Gets node from path
-     * @param {*} path 
+     * @param {string} path 
      * @returns Object { contents, path, parentNode }
      */
     #getNode(path) {
@@ -260,6 +260,11 @@ export class VirtualFileSystem {
         return new VirtualFileSystem.Node(node, path, parent);
     }
 
+    /**
+     * Deep clone node
+     * @param {VirtualFileSystem.Node} node 
+     * @returns 
+     */
     #cloneNode(node) {
         if (node === null) {
             // file: just return a new "file"
@@ -277,8 +282,8 @@ export class VirtualFileSystem {
     }
 
     /**
-     * 
-     * @param {*} node 
+     * Check if node is file
+     * @param {VirtualFileSystem.Node} node 
      * @returns true or false
      */
     #isFile(node) {
@@ -292,8 +297,8 @@ export class VirtualFileSystem {
     }
 
     /**
-     * 
-     * @param {*} node 
+     * Check if node is directory
+     * @param {VirtualFileSystem.Node} node 
      * @returns true or false
      */
     #isDirectory(node) {
@@ -306,6 +311,11 @@ export class VirtualFileSystem {
         return false;
     }
 
+    /**
+     * Check if directory is empty
+     * @param {VirtualFileSystem.Node} node 
+     * @returns 
+     */
     #isDirectoryEmpty(node) {
         if (!(node instanceof VirtualFileSystem.Node)) {
             throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
@@ -318,7 +328,7 @@ export class VirtualFileSystem {
 
     /**
      * Navigate to path
-     * @param {*} path 
+     * @param {string} path 
      */
     cd(path) {
         console.log('%ccd', this.#commandStyle);
@@ -348,7 +358,7 @@ export class VirtualFileSystem {
 
     /**
      * List files and folders in directory
-     * @param {*} path Optional path
+     * @param {string} path Optional path
      */
     ls(path) {
         console.log('%cls', this.#commandStyle);
@@ -370,8 +380,8 @@ export class VirtualFileSystem {
 
     /**
      * Move file
-     * @param {*} source path to source destination
-     * @param {*} dest path to output destination
+     * @param {string} source path to source destination
+     * @param {string} dest path to output destination
      */
     mv(source, dest) {
         console.log('%cmv', this.#commandStyle);
@@ -396,8 +406,8 @@ export class VirtualFileSystem {
 
     /**
      * Copy & paste file
-     * @param {*} source Path to source file 
-     * @param {*} dest Path to output file 
+     * @param {string} source Path to source file 
+     * @param {string} dest Path to output file 
      */
     cp(source, dest) {
         console.log('%ccp', this.#commandStyle);
@@ -424,7 +434,7 @@ export class VirtualFileSystem {
 
     /**
      * Create file
-     * @param {*} path Path to file
+     * @param {string} path Path to file
      */
     touch(path) {
         console.log('%ctouch', this.#commandStyle);
@@ -450,8 +460,8 @@ export class VirtualFileSystem {
 
     /**
      * Create directory
-     * @param {*} args "-p" for recursively make directories of path
-     * @param {*} path Path of directory 
+     * @param {string} args "-p" for recursively make directories of path
+     * @param {string} path Path of directory 
      */
     mkdir(args, path) {
         console.log('%cmkdir', this.#commandStyle);
@@ -526,8 +536,8 @@ export class VirtualFileSystem {
 
     /**
      * Remove empty directory
-     * @param {*} args 
-     * @param {*} path 
+     * @param {string} args 
+     * @param {string} path 
      */
     rmdir(args, path) {
         console.log('%crmdir', this.#commandStyle);
@@ -588,10 +598,43 @@ export class VirtualFileSystem {
     }
 
     /**
-     * Remove file
+     * Remove file/files
+     * @param {string} args 
+     * @param {*} path Path to file, array of paths
      */
-    rm(args) {
+    rm(args, path) {
+        console.log('%crm', this.#commandStyle);
 
+        if (Array.isArray(path)) {
+            // Run through every path
+            for (const p of path) {
+                this.rm(args, p);
+            }
+        }
+        else {
+            const parts = path.split('/').filter(Boolean);
+
+            // Check if file/directory exists
+            const node = this.#getNode(path);
+            if (node === null) {
+                throw new Error(`cannot remove '${parts[parts.length - 1]}': No such file or directory`);
+            }
+
+            // Check if file or directory
+            if (this.#isDirectory(node)) {
+                if (args?.toLowerCase() === '-r' || args === '--recursive') {
+                    delete node.parentNode[parts[parts.length - 1]];
+                    console.log(`Removed directory ${parts[parts.length - 1]}`);
+                }
+                else {
+                    throw new Error(`cannot remove '${parts[parts.length - 1]}': Is a directory`);
+                }
+            }
+            if (this.#isFile(node)) {
+                delete node.parentNode[parts[parts.length - 1]];
+                console.log(`Removed file ${parts[parts.length - 1]}`);
+            }
+        }
     }
 
     getFilestructure() {

@@ -23,5 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fs.cd('/')
     fs.mkdir('-p','bin/test2/test3/test4');
     fs.cd('/')
-    fs.rmdir('-p','bin/test2/test3/test4');
+    fs.cd('bin/test2/test3/test4');
+    fs.touch('fileX.txt');
+    fs.ls();
+    //fs.rm(null,'bin/test2/test3/test4');
+    fs.rm('-r', 'bin/test2/test3/test4');
 });
