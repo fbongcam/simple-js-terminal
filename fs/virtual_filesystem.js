@@ -1,8 +1,17 @@
+// Copyright (c) 2025 fbongcam
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
+import { Node } from "./vfs_node.js";
+
 export class VirtualFileSystem {
+    static Node = Node;
+
     #options;
     #fs;
     #currentPath;
-    #commandStyle = 'border-left: 3px solid black;padding:12px;font-size:13px;font-weight:bold;';
+    #inode = 1000;
+    #commandStyle = 'margin-top:24px;background:#222;color:white;solid black;padding:8px 12px 8px 12px;font-size:13px;font-weight:bold;';
+    #inputStyle = 'padding:16px;border-left:3px solid #333';
 
     constructor(options = {}) {
         this.#options = {
@@ -201,6 +210,65 @@ export class VirtualFileSystem {
             }
         };
         this.#currentPath = '/';
+
+        // Extend filesystem
+        // Directory = {}, File = null
+        const walker = (treeObject, recursivePath) => {
+            const entries = Object.entries(treeObject);
+            for (const [key, value] of entries) {
+                // Walk directory level
+                const newPath = recursivePath ? `${recursivePath}/${key}` : key;
+
+                // If directory, go deeper
+                if (value !== null) {
+                    walker(value, newPath);
+                    // Check if directory has children
+                    // Move its entries to new directory object "children"
+                    let temp;
+                    if (Object.entries(value).length > 0) {
+                        console.log(value)
+                        temp = value;
+                        treeObject[key] = this.#createDirectoryObject();
+                        treeObject[key]['children'] = temp;
+                    }
+                    else {
+                        treeObject[key] = this.#createDirectoryObject();
+                    }
+                }
+                else if (value === null) {
+                    treeObject[key] = this.#createFileObject();
+                }
+            }
+        }
+        walker(this.#fs['/']);
+    }
+
+    #createDirectoryObject() {
+        this.#inode++;
+        return {
+            type: 'dir',
+            children: {},
+            file_info: {
+                createdDate: Date.now(),
+                modifiedDate: Date.now(),
+                size: null
+            },
+            inode: this.#inode
+        };
+    }
+
+    #createFileObject() {
+        this.#inode++;
+        return {
+            type: 'file',
+            content: null,
+            file_info: {
+                createdDate: Date.now(),
+                modifiedDate: Date.now(),
+                size: null
+            },
+            inode: this.#inode
+        };
     }
 
     /**
@@ -208,56 +276,78 @@ export class VirtualFileSystem {
      * @param {string} path 
      * @returns Object { contents, path, parentNode }
      */
-    #getNode(path) {
+    getNode(path) {
+        const rootNode = () => {
+            vfsNode.name = '~';
+            vfsNode.data = this.#fs['/'];
+            vfsNode.path = '/';
+            vfsNode.parentNode = null;
+            vfsNode.isRoot = true;
+            return vfsNode;
+        };
+
         const vfsNode = new VirtualFileSystem.Node();
 
         if (this.#currentPath === '/' && (path === '' || path === undefined)) {
-            vfsNode.contents = this.#fs['/'];
-            vfsNode.path = '/';
-            vfsNode.parentNode = null;
-            return vfsNode;
+            return rootNode();
         }
         else if (this.#currentPath !== '/' && (path === '' || path === undefined)) {
             path = this.#currentPath;
         }
 
+        // Get previous node
         let parts;
         if (path === '..' && this.#currentPath !== '/') {
             parts = this.#currentPath.split('/').filter(Boolean);
             parts = parts.slice(0, parts.length - 2).join('/');
+            // If no previous directory levels, return root
             if (parts.length === 0) {
-                vfsNode.contents = this.#fs['/'];
-                vfsNode.path = '/';
-                vfsNode.parentNode = null;
-                return vfsNode;
+                return rootNode();
             }
         }
         else if (path === '..' && this.#currentPath === '/') {
-            vfsNode.contents = this.#fs['/'];
-            vfsNode.path = '/';
-            vfsNode.parentNode = null;
-            return vfsNode;
+            return rootNode();
         }
 
         parts = path.split('/').filter(Boolean); // split by "/" and drop empties
         let node = this.#fs['/']; // always start at root
 
-        const treeLength = parts.length;
+        const pathLength = parts.length;
+        if (pathLength === 0){
+            return rootNode();
+        }
         let i = 0;
         let parent = this.#fs['/'];
         for (const part of parts) {
             i++;
-            if (i === treeLength - 1) {
-                parent = node[part];
+            // Get node of parent
+            if (i === pathLength - 1) {
+                if (i === 1) {
+                    parent = node[part];
+                }
+                else {
+                    parent = node['children'][part];
+                }
             }
-            if (node && typeof node === 'object' && part in node) {
-                node = node[part];
+            // Get node
+            if ((node && part in node) || (node?.children && part in node.children)) {
+                if (i === 1) {
+                    node = node[part];
+                }
+                else {
+                    node = node['children'][part];
+                }
             } else {
                 return null; // not found
             }
         }
 
-        return new VirtualFileSystem.Node(node, path, parent);
+        const nodeName = parts[parts.length - 1];
+        const nodeData = node;
+        const nodePath = path;
+        const nodeParent = parent;
+
+        return new VirtualFileSystem.Node(nodeName, nodeData, nodePath, nodeParent);
     }
 
     /**
@@ -290,7 +380,7 @@ export class VirtualFileSystem {
         if (!(node instanceof VirtualFileSystem.Node)) {
             throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
         }
-        if (typeof node.contents === null) {
+        if (typeof node.data.type === 'file') {
             return true;
         }
         return false;
@@ -305,7 +395,7 @@ export class VirtualFileSystem {
         if (!(node instanceof VirtualFileSystem.Node)) {
             throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
         }
-        if (typeof node.contents === 'object') {
+        if (node.data.type === 'dir' || node.isRoot) {
             return true;
         }
         return false;
@@ -320,10 +410,25 @@ export class VirtualFileSystem {
         if (!(node instanceof VirtualFileSystem.Node)) {
             throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
         }
-        if (Object.keys(node.contents).length === 0) {
+        if (node.data.children.length > 0) {
             return true;
         }
         return false;
+    }
+
+    #nodeToPath(node) {
+        if (!(node instanceof VirtualFileSystem.Node)) {
+            throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
+        }
+
+        let path = '/';
+        if (node.parentNode === null) {
+            return path;
+        }
+
+
+
+        return path;
     }
 
     /**
@@ -332,27 +437,27 @@ export class VirtualFileSystem {
      */
     cd(path) {
         console.log('%ccd', this.#commandStyle);
-        // Jump to home directory 
-        if (path === '' || path === undefined) {
+        console.log('%cInput: ',this.#inputStyle, path);
+
+        // Jump to root directory 
+        if (path === '' || path === undefined || path === '/' || path === '~') {
             this.#currentPath = '/';
-            return this.#getNode('/');
+            console.log(`Current path: ${this.#currentPath}`);
+            return this.getNode('/');
         }
 
-        const node = this.#getNode(path);
-        if (node === null) {
-            return null;
-        }
-
-        console.log(node)
+        const node = this.getNode(path);
 
         // Check if node is directory
-        if (!this.#isDirectory(node)) {
-            throw new Error(`failed to remove '${dirs[dirs.length - 1]}': Not a directory`);
+        if (node === null || !this.#isDirectory(node)) {
+            throw new Error(`No such file or directory: ${path}`);
+        }
+        else if (this.#isFile(node)) {
+            throw new Error(`Not a directory: ${path}`);
         }
 
-        console.log(node);
-
-        this.#currentPath = path;
+        this.#currentPath = node.path;
+        console.log(`Current path: ${this.#currentPath}`);
         return node;
     }
 
@@ -362,11 +467,12 @@ export class VirtualFileSystem {
      */
     ls(path) {
         console.log('%cls', this.#commandStyle);
+        console.log('%cInput: ',this.#inputStyle, path);
 
         const filenames = [];
         let entries;// Get entries from specified path
-        const node = this.#getNode(path);
-        entries = Object.entries(node.contents);
+        const node = this.getNode(path);
+        entries = Object.entries(node?.data?.children || {});
 
         if (entries.length > 0) {
             for (const [key] of entries) {
@@ -385,21 +491,23 @@ export class VirtualFileSystem {
      */
     mv(source, dest) {
         console.log('%cmv', this.#commandStyle);
+        console.log(`%cInput: ${source} ${dest}`,this.#inputStyle);
+
         const sourceParts = source.split('/').filter(Boolean);
         const destParts = dest.split('/').filter(Boolean);
 
         const sourceKey = sourceParts.pop();
         destParts.pop();
 
-        const sourceNode = this.#getNode(source);
-        const destNode = this.#getNode(destParts.join('/'));
+        const sourceNode = this.getNode(source);
+        const destNode = this.getNode(destParts.join('/'));
 
 
         if (sourceNode === null || destNode === null) {
             throw new Error('No such file or directory');
         }
 
-        destNode.contents[sourceKey] = sourceNode.contents;
+        destNode.data['children'][sourceKey] = sourceNode.data;
         delete sourceNode.parentNode[sourceKey];
         console.log(`Moved ${source} to ${dest}`);
     }
@@ -411,6 +519,7 @@ export class VirtualFileSystem {
      */
     cp(source, dest) {
         console.log('%ccp', this.#commandStyle);
+        console.log(`%cInput: ${source} ${dest}`,this.#inputStyle);
 
         const sourceParts = source.split('/').filter(Boolean);
         const destParts = dest.split('/').filter(Boolean);
@@ -418,17 +527,16 @@ export class VirtualFileSystem {
         const sourceKey = sourceParts.pop();
         destParts.pop();
 
-        const sourceNode = this.#getNode(source);
-        const destNode = this.#getNode(destParts.join('/'));
-
+        const sourceNode = this.getNode(source);
+        const destNode = this.getNode(destParts.join('/'));
 
         if (sourceNode === null || destNode === null) {
             throw new Error('No such file or directory');
         }
 
-        const clonedNode = this.#cloneNode(sourceNode.contents);
+        const clone = JSON.parse(JSON.stringify(sourceNode?.data));
 
-        destNode.contents[sourceKey] = clonedNode;
+        destNode.data[sourceKey] = clone;
         console.log(`Copied ${source} to ${dest}`);
     }
 
@@ -438,6 +546,7 @@ export class VirtualFileSystem {
      */
     touch(path) {
         console.log('%ctouch', this.#commandStyle);
+        console.log(`%cInput: ${path}`,this.#inputStyle);
 
         // Check directory levels of path
         const parts = path.split('/').filter(Boolean);
@@ -446,14 +555,24 @@ export class VirtualFileSystem {
 
         if (dirLevels > 1) { // If path has directory levels
             // Check if parent of path exists
-            const parent = this.#getNode(parts.join('/'));
+            const parent = this.getNode(parts.join('/'));
             if (parent === null) {
                 throw new Error('No such file or directory');
             }
-            parent.contents[filename] = null;
+            parent.data.children[filename] = this.#createFileObject();
         }
         else if (dirLevels === 1) { // If path has no directory levels
-            this.#getNode(this.#currentPath).contents[filename] = null;
+            const node = this.getNode(this.#currentPath);
+            // If path is root
+            if (node.isRoot) {
+                // Create file in root
+                node.data[filename] = this.#createFileObject();
+            }
+            else {
+                // Create file in "children" of directory node
+                node.data.children[filename] = this.#createFileObject();
+            }
+
         }
         console.log(`Created file ${path}`);
     }
@@ -465,6 +584,7 @@ export class VirtualFileSystem {
      */
     mkdir(args, path) {
         console.log('%cmkdir', this.#commandStyle);
+        console.log(`%cInput: ${args} ${path}`,this.#inputStyle);
 
         if ((args !== undefined && args !== null && args !== '' && args !== false) && args !== '-p') {
             throw new Error(`Invalid option -- ${args}`);
@@ -477,10 +597,10 @@ export class VirtualFileSystem {
 
         // If only 1 level, check if directory already exists
         if (dirLevels === 1) {
-            let node = this.#getNode(dirname);
+            let node = this.getNode(dirname);
             if (node === null) { // If directory dont exist
                 // Create directory in parent node
-                node.parent[dirname] = {};
+                node.parent.children[dirname] = this.#createDirectoryObject();
                 console.log(`Created directory ${path}`);
                 return;
             }
@@ -493,7 +613,7 @@ export class VirtualFileSystem {
         const tree = {}
         let tempNode;
         for (const dir of dirs) {
-            tempNode = this.#getNode(dir);
+            tempNode = this.getNode(dir);
             if (tempNode === null) {
                 tree[dir] = false;
                 continue;
@@ -512,26 +632,25 @@ export class VirtualFileSystem {
                     // If dir doesn't exist
                     if (!exist) {
                         // Create directory in existing parent directory
-                        node = this.#getNode(growingPath.join('/'));
-                        console.log(growingPath);
-                        console.log(node)
-                        node.contents[dir] = {};
+                        node = this.getNode(growingPath.join('/'));
+                        node.data.children[dir] = this.#createDirectoryObject();
                     }
                     prevEntry = [dir, exist];
                     growingPath.push(dir);
-                    console.log(prevEntry)
                 }
-                node = this.#getNode(growingPath.join('/'));
-                node.contents[dirname] = {};
+                node = this.getNode(growingPath.join('/'));
+                node.data.children[dirname] = this.#createDirectoryObject();
             }
             else {
                 throw new Error(`Cannot create directory ${path}: No such file or directory`);
             }
         }
         else {
-            const node = this.#getNode(dirs.join('/'));
-            node.contents[dirname] = {};
+            const node = this.getNode(dirs.join('/'));
+            node.data[dirname] = {};
         }
+
+        console.log('Created directory ', path);
     }
 
     /**
@@ -541,6 +660,7 @@ export class VirtualFileSystem {
      */
     rmdir(args, path) {
         console.log('%crmdir', this.#commandStyle);
+        console.log(`%cInput: ${args} ${path}`,this.#inputStyle);
 
         if ((args !== undefined && args !== null && args !== '' && args !== false) && args !== '-p') {
             throw new Error(`Invalid option -- ${args}`);
@@ -551,7 +671,7 @@ export class VirtualFileSystem {
 
         if (dirs.length > 1 && args !== '-p') {
             // Remove last directory in path
-            const node = this.#getNode(dirs.join('/'));
+            const node = this.getNode(dirs.join('/'));
             if (node === null) {
                 throw new Error('No such file or directory');
             }
@@ -572,7 +692,7 @@ export class VirtualFileSystem {
             // Remove directories recursively
             for (let i = dirs.length - 1; i >= 0; i--) {
                 // Check if node is directory
-                const node = this.#getNode(dirs.join('/'));
+                const node = this.getNode(dirs.join('/'));
                 if (node === null) {
                     throw new Error('No such file or directory');
                 }
@@ -604,6 +724,7 @@ export class VirtualFileSystem {
      */
     rm(args, path) {
         console.log('%crm', this.#commandStyle);
+        console.log(`%cInput: ${args} ${path}`,this.#inputStyle);
 
         if (Array.isArray(path)) {
             // Run through every path
@@ -615,7 +736,7 @@ export class VirtualFileSystem {
             const parts = path.split('/').filter(Boolean);
 
             // Check if file/directory exists
-            const node = this.#getNode(path);
+            const node = this.getNode(path);
             if (node === null) {
                 throw new Error(`cannot remove '${parts[parts.length - 1]}': No such file or directory`);
             }
@@ -623,7 +744,7 @@ export class VirtualFileSystem {
             // Check if file or directory
             if (this.#isDirectory(node)) {
                 if (args?.toLowerCase() === '-r' || args === '--recursive') {
-                    delete node.parentNode[parts[parts.length - 1]];
+                    delete node.parentNode.children[parts[parts.length - 1]];
                     console.log(`Removed directory ${parts[parts.length - 1]}`);
                 }
                 else {
@@ -631,7 +752,7 @@ export class VirtualFileSystem {
                 }
             }
             if (this.#isFile(node)) {
-                delete node.parentNode[parts[parts.length - 1]];
+                delete node.parentNode.children[parts[parts.length - 1]];
                 console.log(`Removed file ${parts[parts.length - 1]}`);
             }
         }
@@ -639,31 +760,5 @@ export class VirtualFileSystem {
 
     getFilestructure() {
         return this.#fs;
-    }
-}
-
-VirtualFileSystem.Node = class Node {
-    constructor(contents, path, parentNode) {
-        this.contents = contents;
-        this.path = path;
-        this.parentNode = parentNode;
-    }
-
-    setAll(content, path, parentNode) {
-        this.contents = content;
-        this.path = path;
-        this.parentNode = parentNode;
-    }
-
-    setContent(content) {
-        this.contents = content;
-    }
-
-    setPath(path) {
-        this.path = path;
-    }
-
-    setParentNode(parentNode) {
-        this.parentNode = parentNode;
     }
 }
