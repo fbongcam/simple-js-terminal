@@ -3,7 +3,6 @@
 
 export class Node {
     /**
-     * 
      * @param {string} name name of the node
      * @param {object} data object containing file structure
      * @param {string} path full path to node as string
