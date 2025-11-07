@@ -1,17 +1,19 @@
 import { Terminal } from "./terminal.js";
-import { VirtualFileSystem } from "./fs/virtual_filesystem.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     window.customElements.define('terminal-window', Terminal);
 
     const terminal = new Terminal({
         autofocus: true,
-        user: 'fbongcam',
+        user: 'user1',
         customPrompt: '',
     });
     document.body.appendChild(terminal);
 
-    const fs = new VirtualFileSystem({ users: { filip: {}, alex: {} } });
+
+    /* ----------------------- TESTING DURING DEVELOPMENT ----------------------- */
+    
+    /*const fs = new VirtualFileSystem({ users: { user1: {}, user2: {} } });
     console.log(fs.getFilestructure());
     setTimeout(() => {
         fs.cd('home');
@@ -31,6 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fs.rm('-r', 'bin/test2/test3/test4');
         fs.cd('/')
         fs.cd('test')
-    }, 1000);
+    }, 1000);*/
 
 });

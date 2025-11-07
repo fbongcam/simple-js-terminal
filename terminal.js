@@ -9,6 +9,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 */
 
 import { man } from "./man.js";
+import { VirtualFileSystem } from "./fs/virtual_filesystem.js";
 
 export class Terminal extends HTMLElement {
    #id = 'simple-js-terminal-fb';
@@ -34,6 +35,9 @@ export class Terminal extends HTMLElement {
    #animations = {};
    #keyRepeats = 0;
    #latestEvent;
+
+   // ##
+   #fileSystem;
 
    // Private helper functions
    //------------------
@@ -461,6 +465,83 @@ export class Terminal extends HTMLElement {
          return `Available commands: ${Object.keys(this.#commands).sort().join(', ')}`;
       },
       //-------------
+      ls: (args) => {
+         const result = this.#fileSystem.ls(args[0]);
+         if (result.length !== 0) {
+            const div = document.createElement('div');
+            for (const filename of result) {
+               const item = document.createElement('div');
+               item.textContent = filename;
+               div.appendChild(item);
+            }
+            return div;
+         }
+      },
+      //-------------
+      cd: (args) => {
+         try {
+            this.#fileSystem.cd(args[0]);
+         } catch (e) {
+            return 'cd: ' + e.message;
+         }
+      },
+      //-------------
+      mv: (args) => {
+         try {
+            this.#fileSystem.mv(args[0], args[1]);
+         } catch (e) {
+            return 'mv: ' + e.message;
+         }
+      },
+      //-------------
+      cp: (args) => {
+         try {
+            this.#fileSystem.cp(args[0], args[1]);
+         } catch (e) {
+            return 'cp: ' + e.message;
+         }
+      },
+      //-------------
+      touch: (args) => {
+         try {
+            this.#fileSystem.touch(args[0]);
+         } catch (e) {
+            return 'touch: ' + e.message;
+         }
+      },
+      //-------------
+      mkdir: (args) => {
+         try {
+            this.#fileSystem.mkdir(args[1], args[0]);
+         } catch (e) {
+            return 'mkdir: ' + e.message;
+         }
+      },
+      //-------------
+      rmdir: (args) => {
+         try {
+            this.#fileSystem.rmdir(args[1], args[0]);
+         } catch(e) {
+            return 'rmdir: ' + e.message;
+         }
+         
+      },
+      //-------------
+      rm: (args) => {
+         try {
+            this.#fileSystem.rm(args[1], args[0]);
+         } catch (e) {
+            return 'rm: ' + e.message;
+         }
+      },
+      pwd: (args) => {
+         try {
+            return this.#fileSystem.pwd();
+         } catch (e) {
+            return 'pwd: ' + e.message;
+         }
+      },
+      //-------------
       echo: (args) => {
          return args.join(' ');
       },
@@ -655,15 +736,21 @@ export class Terminal extends HTMLElement {
       if (options.user) {
          const invalidUserChars = /["/\\[\]:;|=,+*?<> ]/;
          if (options.user.match(invalidUserChars)) {
-            console.warn('Invalid user name provided');
+            throw new Error('Invalid user name provided');
          }
          else if (options.user.length > 30) {
-            console.error('User name is too long. (30 characters limit)');
+            throw new Error('User name is too long. (30 characters limit)');
          }
          else {
             this.#user = options.user;
          }
       }
+
+      // Construct file system
+      this.#fileSystem = new VirtualFileSystem({
+         ...(options.user && { users: { [options.user]: {} } })
+      });
+
       // Prompt
       if (options.customPrompt) {
          if (options.customPrompt.length > 50) {
@@ -920,6 +1007,9 @@ export class Terminal extends HTMLElement {
       this.#window.appendChild(div);
    }
 
+   /**
+    * Handles input command by splitting arguments and the command itself. It then calls the matching function.
+    */
    async #handleCommand() {
       const promptLength = this.#PROMPT.length;
       const input = this.#window.lastElementChild.textContent.slice(promptLength).trim();
@@ -935,6 +1025,15 @@ export class Terminal extends HTMLElement {
 
       // Split command and arguments
       const [cmdName, ...args] = input.trim().split(/\s+/);
+
+      // Sort inputs first, arguments after
+      // [inputs...args]
+      args.sort((a, b) => {
+         const aIsFlag = a.startsWith('-');
+         const bIsFlag = b.startsWith('-');
+         return aIsFlag - bIsFlag;
+      });
+      console.log(args)
 
       // Run command
       const newTextBlock = document.createElement('div');
