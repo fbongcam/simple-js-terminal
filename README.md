@@ -17,7 +17,7 @@ The goal of this project isn't to create a fully working terminal with all featu
 
 ### Commands available as of now
 
-<pre>clear, date, echo, help, history, man, nano, ping, whoami</pre>
+<pre>cd, clear, cp, date, echo, help, history, ls, man, mkdir, mv, nano, ping, pwd, rm, rmdir, touch, whoami</pre>
 
 ## 🚀 Getting Started
 
@@ -90,6 +90,18 @@ You will end up with an archive of the newly built **npm package** and a dist fo
 
 ### Changelog
 
+- **0.1**
+  - Basic virtual file system
+  - New commands
+    - cd
+    - cp
+    - ls
+    - mkdir
+    - mv
+    - pwd
+    - rm
+    - rmdir
+    - touch
 - **0.0.4**
   - Tweaked build configuration
 - **0.0.3**
