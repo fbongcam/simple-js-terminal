@@ -1,6 +1,6 @@
 {
     "name": "simple-js-terminal",
-    "version": "0.0.4",
+    "version": "0.1.0",
     "description": "A lightweight, embeddable terminal interface written in plain JavaScript.",
     "keywords": [
         "javascript",
@@ -9,7 +9,8 @@
         "unix",
         "environment",
         "simulator",
-        "terminal"
+        "terminal",
+        "filesystem"
     ],
     "homepage": "https://github.com/fbongcam/simple-js-terminal#readme",
     "bugs": {
