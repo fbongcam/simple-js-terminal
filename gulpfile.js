@@ -6,8 +6,8 @@ import fs from 'fs';
 // Paths
 const paths = {
     js: ['dist/terminal.min.js'],            // Your JS source file
-    css: './terminal.css',                              // Your CSS file
-    output: 'dist/',                                    // Output directory
+    css: './terminal.css',                   // Your CSS file
+    output: 'dist/',                         // Output directory
 };
 
 
@@ -15,7 +15,13 @@ const paths = {
 // Read and escape CSS content
 function getEscapedCSS() {
     const css = fs.readFileSync(paths.css, 'utf8');
-    const minifiedCSS = new CleanCSS().minify(css).styles;
+    const minifiedCSS = new CleanCSS({
+        level: {
+            1: {
+                specialComments: 0
+            }
+        }
+    }).minify(css).styles;
     return JSON.stringify(minifiedCSS);  // Escapes properly for JS string
 }
 
