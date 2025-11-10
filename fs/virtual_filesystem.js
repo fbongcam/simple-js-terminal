@@ -385,7 +385,7 @@ export class VirtualFileSystem {
         if (!(node instanceof VirtualFileSystem.Node)) {
             throw new Error(`Not instance of ${VirtualFileSystem.Node.name}`);
         }
-        if (typeof node.data.type === 'file') {
+        if (node.data.type === 'file') {
             return true;
         }
         return false;
@@ -782,6 +782,8 @@ export class VirtualFileSystem {
             if (node === null) {
                 throw new Error(`cannot remove '${parts[parts.length - 1]}': No such file or directory`);
             }
+
+            console.log('RM NODE: ', node);
 
             // Check if file or directory
             if (this.#isDirectory(node)) {
